@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 # Password Editor Rahasia
-DEFAULT_PASSWORD = "akubahagiasehatkayaraya"
+DEFAULT_PASSWORD = "password_rahasia_anda"
 EDITOR_PASSWORD = st.secrets.get("EDITOR_PASSWORD", DEFAULT_PASSWORD) if hasattr(st, "secrets") else DEFAULT_PASSWORD
 
 DATA_FILE = "stocks_data.json"

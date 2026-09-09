@@ -264,19 +264,94 @@ with col_btn:
                 st.rerun()
 
 # ==========================================
-# STATISTIK KARTU METRIK
+# STATISTIK KARTU METRIK (ALL-TIME & BULAN PILIHAN)
 # ==========================================
 active_list = data["active_stocks"]
 history_list = data["awakened_history"]
 
-# Hitung Winrate & Rata-rata Keuntungan
-win_count = sum(1 for h in history_list if h["gain_pct"] >= 0)
-total_closed = len(history_list)
-winrate = (win_count / total_closed * 100) if total_closed > 0 else 0.0
-total_gain = sum(h["gain_pct"] for h in history_list)
-avg_gain = (total_gain / total_closed) if total_closed > 0 else 0.0
+today = datetime.date.today()
+current_ym = today.strftime("%Y-%m")
+MONTH_NAMES = {
+    1: "Januari", 2: "Februari", 3: "Maret", 4: "April", 5: "Mei", 6: "Juni",
+    7: "Juli", 8: "Agustus", 9: "September", 10: "Oktober", 11: "November", 12: "Desember"
+}
 
-# Hitung Siaga Dekat TP / Floating Profit
+def format_ym_label(ym_str):
+    try:
+        parts = str(ym_str).split("-")
+        y = int(parts[0])
+        m = int(parts[1])
+        return f"{MONTH_NAMES.get(m, m)} {y}"
+    except:
+        return str(ym_str)
+
+# Kumpulkan seluruh bulan yang ada di data (Bulan Ini + Histori + Aktif)
+all_yms = set()
+all_yms.add(current_ym)
+
+for h in history_list:
+    awk = h.get("awakened_date")
+    if awk and len(str(awk)) >= 7:
+        all_yms.add(str(awk)[:7])
+    ent = h.get("entry_date")
+    if ent and len(str(ent)) >= 7:
+        all_yms.add(str(ent)[:7])
+
+for s in active_list:
+    ent = s.get("entry_date")
+    if ent and len(str(ent)) >= 7:
+        all_yms.add(str(ent)[:7])
+
+# Urutkan bulan dari yang terbaru ke terlama (Index 0 = Bulan Terbaru sebagai Default)
+sorted_yms = sorted(list(all_yms), reverse=True)
+month_options_map = {ym: format_ym_label(ym) for ym in sorted_yms}
+
+# Header Ringkasan & Pemilih Bulan Fleksibel
+col_stat_title, col_stat_sel = st.columns([3.5, 1.5])
+with col_stat_title:
+    st.markdown("##### 📈 Ringkasan Performa & Statistik Winrate")
+with col_stat_sel:
+    selected_ym = st.selectbox(
+        "📅 Pilih Bulan Evaluasi:",
+        options=sorted_yms,
+        format_func=lambda x: month_options_map[x],
+        index=0,  # Default: bulan terbaru
+        key="select_eval_month",
+        help="Pilih bulan untuk mengevaluasi performa dan winrate (Default: bulan terbaru)."
+    )
+
+selected_month_label = month_options_map[selected_ym]
+
+# 1. Statistik All-Time (Seluruh Watchlist)
+total_closed = len(history_list)
+win_count = sum(1 for h in history_list if h["gain_pct"] >= 0)
+loss_count = total_closed - win_count
+winrate_all = (win_count / total_closed * 100) if total_closed > 0 else 0.0
+total_gain = sum(h["gain_pct"] for h in history_list)
+avg_gain_all = (total_gain / total_closed) if total_closed > 0 else 0.0
+
+active_total = len(active_list)
+active_syariah = sum(1 for s in active_list if s.get("is_syariah", False))
+active_win = sum(1 for s in active_list if s.get("current_price", 0) >= s.get("entry_price", 0))
+active_winrate = (active_win / active_total * 100) if active_total > 0 else 0.0
+
+grand_total_emiten = total_closed + active_total
+grand_total_win = win_count + active_win
+grand_winrate = (grand_total_win / grand_total_emiten * 100) if grand_total_emiten > 0 else 0.0
+
+# 2. Statistik Khusus Bulan Terpilih (Default: Bulan Terbaru)
+month_history = [h for h in history_list if str(h.get("awakened_date", "")).startswith(selected_ym)]
+month_closed = len(month_history)
+month_win = sum(1 for h in month_history if h["gain_pct"] >= 0)
+month_loss = month_closed - month_win
+winrate_month = (month_win / month_closed * 100) if month_closed > 0 else 0.0
+month_gain = sum(h["gain_pct"] for h in month_history)
+avg_gain_month = (month_gain / month_closed) if month_closed > 0 else 0.0
+
+month_active_entered = [s for s in active_list if str(s.get("entry_date", "")).startswith(selected_ym)]
+month_new_entries = len(month_active_entered)
+
+# 3. Hitung Siaga Dekat TP / Floating Profit
 near_tp_count = 0
 for s in active_list:
     entry = s.get("entry_price", 0)
@@ -286,12 +361,43 @@ for s in active_list:
         if tp1 == 0 or curr < tp1:
             near_tp_count += 1
 
-m1, m2, m3, m4, m5 = st.columns(5)
-m1.metric("Saham Aktif Dipantau", f"{len(active_list)} Emiten", f"{sum(1 for s in active_list if s['is_syariah'])} Syariah")
-m2.metric("Siaga / Dekat TP ⚡", f"{near_tp_count} Emiten", "Sedang Floating Profit")
-m3.metric("Saham Sudah Bangun 🏆", f"{total_closed} Emiten", "Trade Selesai")
-m4.metric("Winrate 🎯", f"{winrate:.1f}%", f"{win_count} Win / {total_closed - win_count} Loss")
-m5.metric("Rata-rata Keuntungan 📈", f"+{avg_gain:.2f}%", "Rerata Gain per Emiten")
+# Tampilan 6 Kolom Kartu Metrik
+m1, m2, m3, m4, m5, m6 = st.columns(6)
+m1.metric("Saham Dipantau", f"{active_total} Emiten", f"{active_syariah} Syariah")
+m2.metric("Dekat TP ⚡", f"{near_tp_count} Emiten", "Floating Profit")
+m3.metric("Saham Bangun 🏆", f"{total_closed} Emiten", f"{month_closed} di {selected_month_label}")
+m4.metric("Winrate Total 🎯", f"{winrate_all:.1f}%", f"{win_count} Win / {loss_count} Loss")
+m5.metric(
+    f"Winrate {selected_month_label} 📅",
+    f"{winrate_month:.1f}%" if month_closed > 0 else "0.0%",
+    f"{month_win} Win / {month_loss} Loss" if month_closed > 0 else "Belum ada exit"
+)
+m6.metric(
+    "Rata-rata Cuan 📈",
+    f"+{avg_gain_all:.2f}%",
+    f"{selected_month_label}: +{avg_gain_month:.2f}%" if month_closed > 0 else "All-Time"
+)
+
+# Expander Rincian Statistik
+with st.expander(f"📊 Rincian Komparasi Winrate: Seluruh Watchlist vs Periode {selected_month_label}"):
+    c_stat1, c_stat2 = st.columns(2)
+    with c_stat1:
+        st.markdown(f"##### 🌐 Seluruh Watchlist (All-Time)")
+        st.markdown(f"""
+        - **Total Saham Selesai (Bangun)**: **{total_closed} Emiten**
+        - **Winrate Realisasi**: **{winrate_all:.1f}%** ({win_count} Menang / {loss_count} Kalah)
+        - **Rata-rata Keuntungan Selesai**: **+{avg_gain_all:.2f}%**
+        - **Saham Aktif di Watchlist**: **{active_total} Emiten** ({active_win} emiten floating profit / **{active_winrate:.1f}%**)
+        - **Winrate Akumulasi (Selesai + Aktif)**: **{grand_winrate:.1f}%** ({grand_total_win} dari {grand_total_emiten} posisi hijau)
+        """)
+    with c_stat2:
+        st.markdown(f"##### 📅 Khusus Periode {selected_month_label}")
+        st.markdown(f"""
+        - **Saham Bangun / Exit di {selected_month_label}**: **{month_closed} Emiten**
+        - **Winrate Periode Ini**: **{winrate_month:.1f}%** ({month_win} Menang / {month_loss} Kalah)
+        - **Rata-rata Keuntungan Periode Ini**: **+{avg_gain_month:.2f}%**
+        - **Saham Baru Masuk Watchlist di {selected_month_label}**: **{month_new_entries} Emiten**
+        """)
 
 st.markdown("---")
 

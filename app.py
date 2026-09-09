@@ -227,7 +227,7 @@ with st.sidebar:
     st.markdown("### 📌 Fitur Dashboard")
     st.markdown("""
     - **Filter Tanggal**: Bisa pilih 1 tanggal spesifik atau rentang tanggal.
-    - **Urutkan Kolom**: Ascending / Descending untuk kedua tabel.
+    - **Urutkan Tabel**: Klik judul kolom apa saja untuk beralih antara Ascending (⬆️) dan Descending (⬇️).
     - **Hari Kerja**: Dihitung otomatis (Senin-Jumat).
     - **Multi-Target TP**: TP 1, TP 2, TP 3 + indikator persentase.
     - **Bungkus Cuan**: Realisasi manual langsung pindah ke riwayat cuan.
@@ -314,22 +314,6 @@ with f_col3:
         help="Pilih 1 tanggal (cth: 8 Juni 2026), atau pilih 2 tanggal untuk rentang periode (cth: 1-10 Agustus 2026). Kosongkan untuk semua."
     )
 
-# Sorting Bar
-s_col1, s_col2 = st.columns([2, 2])
-with s_col1:
-    sort_col_active = st.selectbox(
-        "🔃 Urutkan Berdasarkan:",
-        ["Default (Urutan Input)", "Tanggal Masuk", "Lama Hold", "Kode Saham", "Harga Masuk", "Harga Sekarang", "Floating Gain (%)", "Target TP 1"],
-        key="sort_col_active"
-    )
-with s_col2:
-    sort_order_active = st.radio(
-        "Arah Urutan:",
-        ["⬇️ Descending (Terbaru / Terbesar)", "⬆️ Ascending (Terlama / Terkecil / A-Z)"],
-        horizontal=True,
-        key="sort_order_active"
-    )
-
 # Filter logic
 filtered_active = []
 for s in active_list:
@@ -348,25 +332,8 @@ for s in active_list:
         continue
     filtered_active.append(s)
 
-# Sorting logic
-is_active_asc = "Ascending" in sort_order_active
-if sort_col_active == "Tanggal Masuk":
-    filtered_active.sort(key=lambda x: str(x["entry_date"]), reverse=not is_active_asc)
-elif sort_col_active == "Lama Hold":
-    filtered_active.sort(key=lambda x: calculate_working_days(x["entry_date"]), reverse=not is_active_asc)
-elif sort_col_active == "Kode Saham":
-    filtered_active.sort(key=lambda x: x["ticker"], reverse=not is_active_asc)
-elif sort_col_active == "Harga Masuk":
-    filtered_active.sort(key=lambda x: x["entry_price"], reverse=not is_active_asc)
-elif sort_col_active == "Harga Sekarang":
-    filtered_active.sort(key=lambda x: x["current_price"], reverse=not is_active_asc)
-elif sort_col_active == "Floating Gain (%)":
-    filtered_active.sort(
-        key=lambda x: ((x["current_price"] - x["entry_price"]) / x["entry_price"] * 100) if x["entry_price"] > 0 else 0,
-        reverse=not is_active_asc
-    )
-elif sort_col_active == "Target TP 1":
-    filtered_active.sort(key=lambda x: x["tp1"], reverse=not is_active_asc)
+# Default urutkan dari tanggal masuk terbaru ke terlama (descending)
+filtered_active.sort(key=lambda x: str(x["entry_date"]), reverse=True)
 
 # Siapkan DataFrame Tampilan (Tanpa Kolom Nama)
 display_active = []
@@ -396,7 +363,7 @@ for s in filtered_active:
         "Kode": s["ticker"],
         "Syariah": "🕌 Syariah" if s["is_syariah"] else "Non-Syariah",
         "Tgl Masuk": s["entry_date"],
-        "Lama Hold": f"{hold_work_days} Hari Kerja",
+        "Lama Hold": hold_work_days,
         "Harga Masuk": entry,
         "Harga Sekarang": curr,
         "Floating Gain (%)": round(gain_pct, 2),
@@ -414,12 +381,13 @@ if not df_active.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
+            "Kode": st.column_config.TextColumn("Kode"),
+            "Syariah": st.column_config.TextColumn("Syariah"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
+            "Lama Hold": st.column_config.NumberColumn("Lama Hold", format="%d Hari Kerja"),
             "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
             "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang", format="Rp %d"),
             "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%.2f%%"),
-            "Kode": st.column_config.TextColumn("Kode"),
-            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
-            "Lama Hold": st.column_config.TextColumn("Lama Hold"),
             "TP 1": st.column_config.TextColumn("Target TP 1"),
             "TP 2": st.column_config.TextColumn("Target TP 2"),
             "TP 3": st.column_config.TextColumn("Target TP 3"),
@@ -432,7 +400,9 @@ else:
 
 # Export to CSV (Tanpa Kolom Nama)
 if not df_active.empty:
-    csv_active = df_active.to_csv(index=False).encode('utf-8-sig')
+    df_active_export = df_active.copy()
+    df_active_export["Lama Hold"] = df_active_export["Lama Hold"].apply(lambda x: f"{x} Hari Kerja")
+    csv_active = df_active_export.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
         label="📥 Export Watchlist ke .CSV",
         data=csv_active,
@@ -735,22 +705,6 @@ with hf_col3:
         help="Pilih 1 tanggal untuk hari tertentu, atau pilih 2 tanggal untuk rentang periode bangun. Kosongkan untuk semua."
     )
 
-# Sorting Bar Histori
-hs_col1, hs_col2 = st.columns([2, 2])
-with hs_col1:
-    sort_col_hist = st.selectbox(
-        "🔃 Urutkan Berdasarkan:",
-        ["Default (Terbaru)", "Tanggal Bangun", "Tanggal Masuk", "Realisasi Cuan (%)", "Lama Hold", "Kode Saham", "Harga Masuk", "Harga Jual"],
-        key="sort_col_hist"
-    )
-with hs_col2:
-    sort_order_hist = st.radio(
-        "Arah Urutan Histori:",
-        ["⬇️ Descending (Terbaru / Terbesar)", "⬆️ Ascending (Terlama / Terkecil / A-Z)"],
-        horizontal=True,
-        key="sort_order_hist"
-    )
-
 # Filter logic Histori
 filtered_hist = []
 for h in history_list:
@@ -766,22 +720,8 @@ for h in history_list:
         continue
     filtered_hist.append(h)
 
-# Sorting logic Histori
-is_hist_asc = "Ascending" in sort_order_hist
-if sort_col_hist == "Tanggal Bangun":
-    filtered_hist.sort(key=lambda x: str(x["awakened_date"]), reverse=not is_hist_asc)
-elif sort_col_hist == "Tanggal Masuk":
-    filtered_hist.sort(key=lambda x: str(x["entry_date"]), reverse=not is_hist_asc)
-elif sort_col_hist == "Realisasi Cuan (%)":
-    filtered_hist.sort(key=lambda x: x["gain_pct"], reverse=not is_hist_asc)
-elif sort_col_hist == "Lama Hold":
-    filtered_hist.sort(key=lambda x: x.get("hold_days", 0), reverse=not is_hist_asc)
-elif sort_col_hist == "Kode Saham":
-    filtered_hist.sort(key=lambda x: x["ticker"], reverse=not is_hist_asc)
-elif sort_col_hist == "Harga Masuk":
-    filtered_hist.sort(key=lambda x: x["entry_price"], reverse=not is_hist_asc)
-elif sort_col_hist == "Harga Jual":
-    filtered_hist.sort(key=lambda x: x["exit_price"], reverse=not is_hist_asc)
+# Default urutkan dari tanggal masuk terbaru ke terlama (descending)
+filtered_hist.sort(key=lambda x: str(x["entry_date"]), reverse=True)
 
 # Siapkan DataFrame Histori (Tanpa Kolom Nama)
 display_hist = []
@@ -791,10 +731,10 @@ for h in filtered_hist:
         "Syariah": "🕌 Syariah" if h["is_syariah"] else "Non-Syariah",
         "Tgl Masuk": h["entry_date"],
         "Tgl Bangun": h["awakened_date"],
-        "Lama Hold": f"{h['hold_days']} Hari Kerja",
-        "Harga Masuk": h["entry_price"],
-        "Harga Jual": h["exit_price"],
-        "Realisasi Cuan (%)": round(h["gain_pct"], 2),
+        "Lama Hold": int(h.get("hold_days", 0)),
+        "Harga Masuk": int(h["entry_price"]),
+        "Harga Jual": int(h["exit_price"]),
+        "Realisasi Cuan (%)": round(float(h["gain_pct"]), 2),
         "Status Exit": h["status_exit"],
         "Catatan": h.get("note", "-")
     })
@@ -806,19 +746,21 @@ if not df_hist.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
-            "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d"),
-            "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%"),
             "Kode": st.column_config.TextColumn("Kode"),
             "Syariah": st.column_config.TextColumn("Syariah"),
             "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
             "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun"),
-            "Lama Hold": st.column_config.TextColumn("Lama Hold"),
+            "Lama Hold": st.column_config.NumberColumn("Lama Hold", format="%d Hari Kerja"),
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
+            "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d"),
+            "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%"),
             "Status Exit": st.column_config.TextColumn("Status Exit"),
             "Catatan": st.column_config.TextColumn("Catatan"),
         }
     )
-    csv_hist = df_hist.to_csv(index=False).encode('utf-8-sig')
+    df_hist_export = df_hist.copy()
+    df_hist_export["Lama Hold"] = df_hist_export["Lama Hold"].apply(lambda x: f"{x} Hari Kerja")
+    csv_hist = df_hist_export.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
         label="📥 Export Histori Cuan ke .CSV",
         data=csv_hist,

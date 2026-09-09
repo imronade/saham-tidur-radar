@@ -404,7 +404,21 @@ st.markdown("---")
 # ==========================================
 # TABEL 1: WATCHLIST SAHAM TIDUR (AKTIF)
 # ==========================================
-st.subheader("📋 Daftar Saham Tidur (Aktif Dipantau)")
+col_tbl_title, col_tbl_refresh = st.columns([3.6, 1.4])
+with col_tbl_title:
+    st.subheader("📋 Daftar Saham Tidur (Aktif Dipantau)")
+with col_tbl_refresh:
+    if st.button("🔄 Refresh Harga Terkini", key="btn_refresh_watchlist_table", use_container_width=True, help="Klik untuk memperbarui harga bursa terkini secara manual"):
+        with st.spinner("Mengambil harga penutupan bursa..."):
+            updated_count = 0
+            for s in data["active_stocks"]:
+                price = fetch_latest_price(s["ticker"])
+                if price:
+                    s["current_price"] = price
+                    updated_count += 1
+            save_data(data)
+            st.toast(f"Berhasil refresh {updated_count} harga saham!", icon="✅")
+            st.rerun()
 
 # Filter Bar
 f_col1, f_col2, f_col3 = st.columns([1.5, 1.5, 2])
@@ -600,7 +614,7 @@ if is_editor:
     # TAB 2: TAMBAH SAHAM BARU
     # ----------------------------------------------------
     with tab_add:
-        with st.form("form_add_stock"):
+        with st.form("form_add_stock", clear_on_submit=True):
             st.markdown("**Form Tambah Saham Tidur Baru:**")
             a1, a2, a3 = st.columns(3)
             with a1:

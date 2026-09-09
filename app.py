@@ -50,6 +50,31 @@ def calculate_working_days(start_date, end_date=None):
     return count
 
 # ==========================================
+# FUNGSI FILTER TANGGAL FLEKSIBEL (SINGLE / RANGE)
+# ==========================================
+def is_date_in_filter(date_str, filter_val):
+    if not filter_val:
+        return True
+    try:
+        if isinstance(date_str, str):
+            d = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        elif isinstance(date_str, (datetime.date, datetime.datetime)):
+            d = date_str if isinstance(date_str, datetime.date) else date_str.date()
+        else:
+            return True
+    except:
+        return True
+    
+    if len(filter_val) == 1:
+        return d == filter_val[0]
+    elif len(filter_val) >= 2:
+        start_d, end_d = filter_val[0], filter_val[1]
+        if start_d > end_d:
+            start_d, end_d = end_d, start_d
+        return start_d <= d <= end_d
+    return True
+
+# ==========================================
 # FUNGSI LOAD & SAVE DATA
 # ==========================================
 def load_data():
@@ -58,7 +83,6 @@ def load_data():
             "active_stocks": [
                 {
                     "ticker": "FINN",
-                    "name": "First Indo American",
                     "is_syariah": True,
                     "entry_date": "2026-08-01",
                     "entry_price": 50,
@@ -70,7 +94,6 @@ def load_data():
                 },
                 {
                     "ticker": "KBAG",
-                    "name": "Karya Bersama Anugerah",
                     "is_syariah": True,
                     "entry_date": "2026-06-15",
                     "entry_price": 50,
@@ -82,7 +105,6 @@ def load_data():
                 },
                 {
                     "ticker": "MDLN",
-                    "name": "Modernland Realty",
                     "is_syariah": True,
                     "entry_date": "2026-05-20",
                     "entry_price": 62,
@@ -94,7 +116,6 @@ def load_data():
                 },
                 {
                     "ticker": "POLU",
-                    "name": "Golden Flower Tbk",
                     "is_syariah": False,
                     "entry_date": "2026-04-12",
                     "entry_price": 50,
@@ -108,7 +129,6 @@ def load_data():
             "awakened_history": [
                 {
                     "ticker": "BUMI",
-                    "name": "Bumi Resources Tbk",
                     "is_syariah": True,
                     "entry_date": "2026-06-02",
                     "awakened_date": "2026-07-24",
@@ -121,7 +141,6 @@ def load_data():
                 },
                 {
                     "ticker": "KPIG",
-                    "name": "MNC Land Tbk",
                     "is_syariah": True,
                     "entry_date": "2026-07-10",
                     "awakened_date": "2026-09-09",
@@ -134,15 +153,15 @@ def load_data():
                 }
             ]
         }
-        with open(DATA_FILE, "w") as f:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(initial_data, f, indent=2)
         return initial_data
 
-    with open(DATA_FILE, "r") as f:
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 def save_data(data):
-    with open(DATA_FILE, "w") as f:
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 # ==========================================
@@ -167,6 +186,9 @@ def fetch_latest_price(ticker):
 if "data" not in st.session_state:
     st.session_state["data"] = load_data()
 
+if "is_editor" not in st.session_state:
+    st.session_state["is_editor"] = False
+
 data = st.session_state["data"]
 
 # ==========================================
@@ -174,24 +196,42 @@ data = st.session_state["data"]
 # ==========================================
 with st.sidebar:
     st.header("🔐 Akses Editor")
-    input_pass = st.text_input("Password Editor", type="password", placeholder="Ketik password...")
     
-    is_editor = (input_pass == EDITOR_PASSWORD)
-    
-    if is_editor:
+    if st.session_state["is_editor"]:
         st.success("✅ **Mode: Editor Aktif ✍️**")
-        st.caption("Anda memiliki hak akses menambah, mengedit TP, update harga, dan membungkus cuan.")
+        st.caption("Anda memiliki hak akses menambah, mengedit tabel, centang hapus saham, update harga, dan membungkus cuan.")
+        
+        # TOMBOL EXIT / LOGOUT MODE EDITOR
+        if st.button("🚪 Keluar / Exit Mode Editor", type="secondary", use_container_width=True, key="btn_logout_sidebar"):
+            st.session_state["is_editor"] = False
+            st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
+            st.rerun()
     else:
         st.info("👁️ **Mode: Viewer (Hanya Lihat)**")
-        st.caption("Pengunjung publik hanya dapat melihat data, memfilter syariah, dan mengunduh CSV.")
+        st.caption("Pengunjung publik hanya dapat melihat data, memfilter syariah & tanggal, mengurutkan tabel, dan mengunduh CSV.")
+        
+        with st.form("form_login_editor", clear_on_submit=True):
+            input_pass = st.text_input("Password Editor", type="password", placeholder="Ketik password...")
+            btn_login = st.form_submit_button("🔓 Masuk Mode Editor", use_container_width=True)
+            if btn_login:
+                if input_pass == EDITOR_PASSWORD:
+                    st.session_state["is_editor"] = True
+                    st.toast("Berhasil masuk sebagai Editor!", icon="✅")
+                    st.rerun()
+                elif input_pass:
+                    st.error("Password salah! Silakan coba lagi.")
+
+    is_editor = st.session_state["is_editor"]
 
     st.markdown("---")
-    st.markdown("### 📌 Petunjuk Penggunaan")
+    st.markdown("### 📌 Fitur Dashboard")
     st.markdown("""
+    - **Filter Tanggal**: Bisa pilih 1 tanggal spesifik atau rentang tanggal.
+    - **Urutkan Kolom**: Ascending / Descending untuk kedua tabel.
     - **Hari Kerja**: Dihitung otomatis (Senin-Jumat).
-    - **TP 1, 2, 3**: Dihitung persentasenya terhadap harga masuk.
-    - **Bungkus Cuan**: Pindahkan saham yang sudah profit ke tabel histori.
-    - **Export CSV**: Download tabel langsung dalam format Excel/CSV.
+    - **Multi-Target TP**: TP 1, TP 2, TP 3 + indikator persentase.
+    - **Bungkus Cuan**: Realisasi manual langsung pindah ke riwayat cuan.
+    - **Export CSV**: Download tabel bersih tanpa kolom nama perusahaan.
     """)
 
 # ==========================================
@@ -200,20 +240,27 @@ with st.sidebar:
 col_title, col_btn = st.columns([3, 1.5])
 with col_title:
     st.title("💤 IDX Sleeping Stock Radar")
-    st.caption("Pantau saham tidur, evaluasi **Winrate** & **Rata-rata Keuntungan**, filter Syariah, dan amankan profit.")
+    st.caption("Pantau saham tidur, evaluasi **Winrate** & **Rata-rata Keuntungan**, filter Syariah & Tanggal, dan amankan profit.")
 
 with col_btn:
     if is_editor:
-        if st.button("🔄 Update Harga Sekarang", type="primary", use_container_width=True):
-            with st.spinner("Mengambil harga penutupan bursa..."):
-                updated_count = 0
-                for s in data["active_stocks"]:
-                    price = fetch_latest_price(s["ticker"])
-                    if price:
-                        s["current_price"] = price
-                        updated_count += 1
-                save_data(data)
-                st.toast(f"Berhasil update {updated_count} saham!", icon="✅")
+        b_upd, b_exit = st.columns([1.3, 1])
+        with b_upd:
+            if st.button("🔄 Update Harga", type="primary", use_container_width=True):
+                with st.spinner("Mengambil harga bursa..."):
+                    updated_count = 0
+                    for s in data["active_stocks"]:
+                        price = fetch_latest_price(s["ticker"])
+                        if price:
+                            s["current_price"] = price
+                            updated_count += 1
+                    save_data(data)
+                    st.toast(f"Berhasil update {updated_count} saham!", icon="✅")
+                    st.rerun()
+        with b_exit:
+            if st.button("🚪 Exit Editor", type="secondary", use_container_width=True, key="btn_exit_header"):
+                st.session_state["is_editor"] = False
+                st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
                 st.rerun()
 
 # ==========================================
@@ -229,7 +276,7 @@ winrate = (win_count / total_closed * 100) if total_closed > 0 else 0.0
 total_gain = sum(h["gain_pct"] for h in history_list)
 avg_gain = (total_gain / total_closed) if total_closed > 0 else 0.0
 
-# Hitung Siaga
+# Hitung Siaga Dekat TP
 near_tp_count = 0
 for s in active_list:
     if s["current_price"] > s["entry_price"] and s["current_price"] < s["tp1"]:
@@ -249,33 +296,79 @@ st.markdown("---")
 # ==========================================
 st.subheader("📋 Daftar Saham Tidur (Aktif Dipantau)")
 
-# Filter Controls
-f_col1, f_col2 = st.columns([2, 2])
+# Filter Bar
+f_col1, f_col2, f_col3 = st.columns([1.5, 1.5, 2])
 with f_col1:
     syariah_filter = st.selectbox(
-        "Filter Syariah:",
-        ["Semua Saham", "🕌 Hanya Saham Syariah (ISSI)", "Hanya Non-Syariah"],
+        "🕌 Filter Syariah:",
+        ["Semua Saham", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
         key="filter_active_syariah"
     )
 with f_col2:
-    search_query = st.text_input("Cari Kode / Nama Saham:", placeholder="misal: FINN", key="search_active")
+    search_query = st.text_input("🔍 Cari Kode Saham:", placeholder="misal: FINN", key="search_active")
+with f_col3:
+    date_filter_active = st.date_input(
+        "📅 Filter Tgl Masuk (Rentang / 1 Hari):",
+        value=(),
+        key="date_filter_active",
+        help="Pilih 1 tanggal (cth: 8 Juni 2026), atau pilih 2 tanggal untuk rentang periode (cth: 1-10 Agustus 2026). Kosongkan untuk semua."
+    )
+
+# Sorting Bar
+s_col1, s_col2 = st.columns([2, 2])
+with s_col1:
+    sort_col_active = st.selectbox(
+        "🔃 Urutkan Berdasarkan:",
+        ["Default (Urutan Input)", "Tanggal Masuk", "Lama Hold", "Kode Saham", "Harga Masuk", "Harga Sekarang", "Floating Gain (%)", "Target TP 1"],
+        key="sort_col_active"
+    )
+with s_col2:
+    sort_order_active = st.radio(
+        "Arah Urutan:",
+        ["⬇️ Descending (Terbaru / Terbesar)", "⬆️ Ascending (Terlama / Terkecil / A-Z)"],
+        horizontal=True,
+        key="sort_order_active"
+    )
 
 # Filter logic
 filtered_active = []
 for s in active_list:
     # Syariah filter
-    if syariah_filter == "🕌 Hanya Saham Syariah (ISSI)" and not s["is_syariah"]:
+    if syariah_filter == "Hanya Syariah (ISSI)" and not s["is_syariah"]:
         continue
     if syariah_filter == "Hanya Non-Syariah" and s["is_syariah"]:
         continue
     # Search filter
     if search_query:
-        q = search_query.upper()
-        if q not in s["ticker"].upper() and q not in s.get("name", "").upper():
+        q = search_query.upper().strip()
+        if q not in s["ticker"].upper():
             continue
+    # Date filter
+    if not is_date_in_filter(s["entry_date"], date_filter_active):
+        continue
     filtered_active.append(s)
 
-# Siapkan DataFrame Tampilan
+# Sorting logic
+is_active_asc = "Ascending" in sort_order_active
+if sort_col_active == "Tanggal Masuk":
+    filtered_active.sort(key=lambda x: str(x["entry_date"]), reverse=not is_active_asc)
+elif sort_col_active == "Lama Hold":
+    filtered_active.sort(key=lambda x: calculate_working_days(x["entry_date"]), reverse=not is_active_asc)
+elif sort_col_active == "Kode Saham":
+    filtered_active.sort(key=lambda x: x["ticker"], reverse=not is_active_asc)
+elif sort_col_active == "Harga Masuk":
+    filtered_active.sort(key=lambda x: x["entry_price"], reverse=not is_active_asc)
+elif sort_col_active == "Harga Sekarang":
+    filtered_active.sort(key=lambda x: x["current_price"], reverse=not is_active_asc)
+elif sort_col_active == "Floating Gain (%)":
+    filtered_active.sort(
+        key=lambda x: ((x["current_price"] - x["entry_price"]) / x["entry_price"] * 100) if x["entry_price"] > 0 else 0,
+        reverse=not is_active_asc
+    )
+elif sort_col_active == "Target TP 1":
+    filtered_active.sort(key=lambda x: x["tp1"], reverse=not is_active_asc)
+
+# Siapkan DataFrame Tampilan (Tanpa Kolom Nama)
 display_active = []
 for s in filtered_active:
     entry = s["entry_price"]
@@ -295,19 +388,18 @@ for s in filtered_active:
         status = "TP 1 TERCAPAI 🎯"
     elif curr > entry:
         diff_tp1 = s["tp1"] - curr
-        status = f"DEKAT TP 1 (Sisa {diff_tp1} poin) ⚡"
+        status = f"DEKAT TP 1 (Sisa {diff_tp1} pt) ⚡"
     else:
         status = "MASIH TIDUR 💤"
 
     display_active.append({
         "Kode": s["ticker"],
-        "Nama": s["name"],
         "Syariah": "🕌 Syariah" if s["is_syariah"] else "Non-Syariah",
         "Tgl Masuk": s["entry_date"],
         "Lama Hold": f"{hold_work_days} Hari Kerja",
-        "Harga Masuk": f"Rp {entry}",
-        "Harga Sekarang": f"Rp {curr}",
-        "Floating Gain": f"{gain_pct:+.2f}%",
+        "Harga Masuk": entry,
+        "Harga Sekarang": curr,
+        "Floating Gain (%)": round(gain_pct, 2),
         "TP 1": f"Rp {s['tp1']} (+{tp1_pct:.1f}%)",
         "TP 2": f"Rp {s['tp2']} (+{tp2_pct:.1f}%)",
         "TP 3": f"Rp {s['tp3']} (+{tp3_pct:.1f}%)",
@@ -317,11 +409,28 @@ for s in filtered_active:
 
 df_active = pd.DataFrame(display_active)
 if not df_active.empty:
-    st.dataframe(df_active, use_container_width=True, hide_index=True)
+    st.dataframe(
+        df_active,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
+            "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang", format="Rp %d"),
+            "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%.2f%%"),
+            "Kode": st.column_config.TextColumn("Kode"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
+            "Lama Hold": st.column_config.TextColumn("Lama Hold"),
+            "TP 1": st.column_config.TextColumn("Target TP 1"),
+            "TP 2": st.column_config.TextColumn("Target TP 2"),
+            "TP 3": st.column_config.TextColumn("Target TP 3"),
+            "Papan": st.column_config.TextColumn("Papan"),
+            "Status": st.column_config.TextColumn("Status"),
+        }
+    )
 else:
     st.info("Tidak ada saham yang sesuai dengan filter.")
 
-# Export to CSV
+# Export to CSV (Tanpa Kolom Nama)
 if not df_active.empty:
     csv_active = df_active.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
@@ -335,10 +444,25 @@ if not df_active.empty:
 # PANEL OPERASI EDITOR (HANYA AKTIF SAAT LOGIN)
 # ==========================================
 if is_editor:
-    st.markdown("### ✍️ Panel Aksi Editor")
-    tab_bungkus, tab_add, tab_edit = st.tabs(["💰 Bungkus Cuan (Realisasi)", "➕ Tambah Saham Tidur", "⚙️ Kelola / Hapus Saham"])
+    st.markdown("---")
+    pe_title, pe_exit = st.columns([3.5, 1.2])
+    with pe_title:
+        st.markdown("### ✍️ Panel Aksi Editor")
+    with pe_exit:
+        if st.button("🚪 Keluar / Exit Editor", type="secondary", use_container_width=True, key="btn_exit_panel"):
+            st.session_state["is_editor"] = False
+            st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
+            st.rerun()
+    tab_bungkus, tab_add, tab_manage_active, tab_manage_hist = st.tabs([
+        "💰 Bungkus Cuan (Realisasi)",
+        "➕ Tambah Saham Tidur",
+        "⚙️ Kelola Watchlist (Centang Hapus / Edit)",
+        "📜 Kelola Histori Bangun (Centang Hapus / Edit)"
+    ])
 
+    # ----------------------------------------------------
     # TAB 1: BUNGKUS CUAN
+    # ----------------------------------------------------
     with tab_bungkus:
         st.markdown("**Amankan profit saham tidur (meski belum sentuh TP 1 resmi):**")
         tickers_active = [s["ticker"] for s in active_list]
@@ -366,7 +490,6 @@ if is_editor:
                 work_days = calculate_working_days(selected_stock["entry_date"])
                 new_hist = {
                     "ticker": selected_stock["ticker"],
-                    "name": selected_stock["name"],
                     "is_syariah": selected_stock["is_syariah"],
                     "entry_date": selected_stock["entry_date"],
                     "awakened_date": str(datetime.date.today()),
@@ -382,20 +505,23 @@ if is_editor:
                 save_data(data)
                 st.success(f"Saham {sel_ticker} berhasil dibungkus dan masuk ke riwayat keuntungan!")
                 st.rerun()
+        else:
+            st.info("Belum ada saham aktif di watchlist untuk dibungkus.")
 
+    # ----------------------------------------------------
     # TAB 2: TAMBAH SAHAM BARU
+    # ----------------------------------------------------
     with tab_add:
         with st.form("form_add_stock"):
             st.markdown("**Form Tambah Saham Tidur Baru:**")
             a1, a2, a3 = st.columns(3)
             with a1:
-                new_ticker = st.text_input("Kode Saham (4 Huruf):", placeholder="cth: BUMI").upper()
-                new_name = st.text_input("Nama Perusahaan:", placeholder="cth: Bumi Resources")
+                new_ticker = st.text_input("Kode Saham (4 Huruf):", placeholder="cth: BUMI").upper().strip()
                 new_syariah = st.checkbox("🕌 Saham Syariah (ISSI)", value=True)
+                new_fca = st.checkbox("Masuk Papan FCA (Full Call Auction)", value=False)
             with a2:
                 new_entry_date = st.date_input("Tanggal Masuk Watchlist:", datetime.date.today())
                 new_entry_price = st.number_input("Harga Waktu Masuk (Rp):", min_value=1, value=50)
-                new_fca = st.checkbox("Masuk Papan FCA (Full Call Auction)", value=False)
             with a3:
                 new_tp1 = st.number_input("Target TP 1 (Rp):", min_value=1, value=58)
                 new_tp2 = st.number_input("Target TP 2 (Rp):", min_value=1, value=65)
@@ -410,7 +536,6 @@ if is_editor:
                 else:
                     new_item = {
                         "ticker": new_ticker,
-                        "name": new_name or "Perusahaan Terbuka",
                         "is_syariah": new_syariah,
                         "entry_date": str(new_entry_date),
                         "entry_price": int(new_entry_price),
@@ -425,16 +550,165 @@ if is_editor:
                     st.success(f"Saham {new_ticker} berhasil ditambahkan!")
                     st.rerun()
 
-    # TAB 3: KELOLA / HAPUS SAHAM
-    with tab_edit:
-        st.markdown("**Hapus Saham dari Watchlist:**")
-        del_ticker = st.selectbox("Pilih Saham yang Ingin Dihapus:", ["-"] + tickers_active)
-        if del_ticker != "-":
-            if st.button(f"🗑️ Hapus Saham {del_ticker}", type="secondary"):
-                data["active_stocks"] = [s for s in data["active_stocks"] if s["ticker"] != del_ticker]
-                save_data(data)
-                st.success(f"Saham {del_ticker} telah dihapus dari daftar.")
-                st.rerun()
+    # ----------------------------------------------------
+    # TAB 3: KELOLA WATCHLIST (CENTANG HAPUS / EDIT TABEL)
+    # ----------------------------------------------------
+    with tab_manage_active:
+        st.markdown("##### ⚙️ Edit & Hapus Saham Watchlist")
+        st.caption("Centang kotak **Pilih Hapus** untuk menghapus saham yang diinginkan, atau ubah angka langsung di tabel lalu klik **Simpan Perubahan**.")
+        
+        if active_list:
+            manage_rows = []
+            for s in active_list:
+                manage_rows.append({
+                    "Hapus": False,
+                    "Kode": s["ticker"],
+                    "Tgl Masuk": s["entry_date"],
+                    "Harga Masuk": int(s["entry_price"]),
+                    "Harga Sekarang": int(s["current_price"]),
+                    "TP 1": int(s["tp1"]),
+                    "TP 2": int(s["tp2"]),
+                    "TP 3": int(s["tp3"]),
+                    "Syariah": bool(s["is_syariah"]),
+                    "FCA": bool(s.get("is_fca", False))
+                })
+            df_manage_active = pd.DataFrame(manage_rows)
+
+            edited_active_df = st.data_editor(
+                df_manage_active,
+                column_config={
+                    "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
+                    "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
+                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", disabled=True),
+                    "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
+                    "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang (Rp)", min_value=1, step=1, format="%d"),
+                    "TP 1": st.column_config.NumberColumn("Target TP 1 (Rp)", min_value=1, step=1, format="%d"),
+                    "TP 2": st.column_config.NumberColumn("Target TP 2 (Rp)", min_value=1, step=1, format="%d"),
+                    "TP 3": st.column_config.NumberColumn("Target TP 3 (Rp)", min_value=1, step=1, format="%d"),
+                    "Syariah": st.column_config.CheckboxColumn("Syariah (ISSI)"),
+                    "FCA": st.column_config.CheckboxColumn("Papan FCA"),
+                },
+                hide_index=True,
+                use_container_width=True,
+                key="table_editor_active"
+            )
+
+            col_act1, col_act2 = st.columns(2)
+            with col_act1:
+                if st.button("🗑️ Hapus Saham yang Dicentang", type="secondary", use_container_width=True):
+                    to_delete = edited_active_df[edited_active_df["Hapus"] == True]["Kode"].tolist()
+                    if not to_delete:
+                        st.warning("Silakan centang minimal satu saham di kolom 'Pilih Hapus 🗑️' terlebih dahulu.")
+                    else:
+                        data["active_stocks"] = [s for s in data["active_stocks"] if s["ticker"] not in to_delete]
+                        save_data(data)
+                        st.success(f"Berhasil menghapus {len(to_delete)} saham: {', '.join(to_delete)}")
+                        st.rerun()
+
+            with col_act2:
+                if st.button("💾 Simpan Perubahan Watchlist", type="primary", use_container_width=True):
+                    ticker_dict = {row["Kode"]: row for _, row in edited_active_df.iterrows()}
+                    for s in data["active_stocks"]:
+                        if s["ticker"] in ticker_dict:
+                            r = ticker_dict[s["ticker"]]
+                            s["entry_price"] = int(r["Harga Masuk"])
+                            s["current_price"] = int(r["Harga Sekarang"])
+                            s["tp1"] = int(r["TP 1"])
+                            s["tp2"] = int(r["TP 2"])
+                            s["tp3"] = int(r["TP 3"])
+                            s["is_syariah"] = bool(r["Syariah"])
+                            s["is_fca"] = bool(r["FCA"])
+                    save_data(data)
+                    st.success("Perubahan data watchlist berhasil disimpan!")
+                    st.rerun()
+        else:
+            st.info("Watchlist kosong, belum ada saham untuk diedit/dihapus.")
+
+    # ----------------------------------------------------
+    # TAB 4: KELOLA HISTORI BANGUN (CENTANG HAPUS / EDIT TABEL)
+    # ----------------------------------------------------
+    with tab_manage_hist:
+        st.markdown("##### 📜 Edit & Hapus Histori Saham Bangun")
+        st.caption("Centang kolom **Pilih Hapus** untuk menghapus histori tertentu, atau sesuaikan harga jual / tgl / catatan lalu klik **Simpan Perubahan**.")
+
+        if history_list:
+            hist_rows = []
+            for idx, h in enumerate(history_list):
+                hist_rows.append({
+                    "Hapus": False,
+                    "_id": idx,
+                    "Kode": h["ticker"],
+                    "Tgl Masuk": h["entry_date"],
+                    "Tgl Bangun": h["awakened_date"],
+                    "Harga Masuk": int(h["entry_price"]),
+                    "Harga Jual": int(h["exit_price"]),
+                    "Status Exit": h.get("status_exit", "BUNGKUS MANUAL 💰"),
+                    "Catatan": h.get("note", "")
+                })
+            df_manage_hist = pd.DataFrame(hist_rows)
+
+            edited_hist_df = st.data_editor(
+                df_manage_hist,
+                column_config={
+                    "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
+                    "_id": None,  # disembunyikan
+                    "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
+                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk (YYYY-MM-DD)"),
+                    "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun (YYYY-MM-DD)"),
+                    "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
+                    "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
+                    "Status Exit": st.column_config.TextColumn("Status Exit"),
+                    "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit"),
+                },
+                hide_index=True,
+                use_container_width=True,
+                key="table_editor_hist"
+            )
+
+            hcol1, hcol2 = st.columns(2)
+            with hcol1:
+                if st.button("🗑️ Hapus Histori yang Dicentang", type="secondary", use_container_width=True):
+                    delete_ids = edited_hist_df[edited_hist_df["Hapus"] == True]["_id"].tolist()
+                    if not delete_ids:
+                        st.warning("Silakan centang minimal satu baris histori di kolom 'Pilih Hapus 🗑️' terlebih dahulu.")
+                    else:
+                        data["awakened_history"] = [h for idx, h in enumerate(data["awakened_history"]) if idx not in delete_ids]
+                        save_data(data)
+                        st.success(f"Berhasil menghapus {len(delete_ids)} data histori.")
+                        st.rerun()
+
+            with hcol2:
+                if st.button("💾 Simpan Perubahan Data Histori", type="primary", use_container_width=True):
+                    new_hist_list = []
+                    for _, r in edited_hist_df.iterrows():
+                        entry_p = int(r["Harga Masuk"])
+                        exit_p = int(r["Harga Jual"])
+                        recalculated_gain = round(((exit_p - entry_p) / entry_p * 100), 2) if entry_p > 0 else 0.0
+                        tgl_masuk = str(r["Tgl Masuk"]).strip()
+                        tgl_bangun = str(r["Tgl Bangun"]).strip()
+                        hold_days = calculate_working_days(tgl_masuk, tgl_bangun)
+                        
+                        orig_idx = int(r["_id"])
+                        orig_syariah = data["awakened_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["awakened_history"]) else True
+                        
+                        new_hist_list.append({
+                            "ticker": str(r["Kode"]),
+                            "is_syariah": orig_syariah,
+                            "entry_date": tgl_masuk,
+                            "awakened_date": tgl_bangun,
+                            "hold_days": hold_days,
+                            "entry_price": entry_p,
+                            "exit_price": exit_p,
+                            "gain_pct": recalculated_gain,
+                            "status_exit": str(r["Status Exit"]),
+                            "note": str(r["Catatan"])
+                        })
+                    data["awakened_history"] = new_hist_list
+                    save_data(data)
+                    st.success("Perubahan data histori saham bangun berhasil disimpan!")
+                    st.rerun()
+        else:
+            st.info("Belum ada histori saham bangun untuk diedit/dihapus.")
 
 st.markdown("---")
 
@@ -443,37 +717,107 @@ st.markdown("---")
 # ==========================================
 st.subheader("🏆 Saham yang Sudah Bangun / Dibungkus Cuan (Histori)")
 
-h_col1, h_col2 = st.columns([3, 1])
-with h_col1:
+# Filter Bar Histori
+hf_col1, hf_col2, hf_col3 = st.columns([1.5, 1.5, 2])
+with hf_col1:
     syariah_hist_filter = st.selectbox(
-        "Filter Syariah Histori:",
-        ["Semua Histori", "🕌 Hanya Syariah", "Hanya Non-Syariah"],
+        "🕌 Filter Syariah Histori:",
+        ["Semua Histori", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
         key="filter_hist_syariah"
     )
+with hf_col2:
+    search_hist_query = st.text_input("🔍 Cari Kode Saham Histori:", placeholder="misal: BUMI", key="search_hist")
+with hf_col3:
+    date_filter_hist = st.date_input(
+        "📅 Filter Tgl Bangun (Rentang / 1 Hari):",
+        value=(),
+        key="date_filter_hist",
+        help="Pilih 1 tanggal untuk hari tertentu, atau pilih 2 tanggal untuk rentang periode bangun. Kosongkan untuk semua."
+    )
 
-display_hist = []
+# Sorting Bar Histori
+hs_col1, hs_col2 = st.columns([2, 2])
+with hs_col1:
+    sort_col_hist = st.selectbox(
+        "🔃 Urutkan Berdasarkan:",
+        ["Default (Terbaru)", "Tanggal Bangun", "Tanggal Masuk", "Realisasi Cuan (%)", "Lama Hold", "Kode Saham", "Harga Masuk", "Harga Jual"],
+        key="sort_col_hist"
+    )
+with hs_col2:
+    sort_order_hist = st.radio(
+        "Arah Urutan Histori:",
+        ["⬇️ Descending (Terbaru / Terbesar)", "⬆️ Ascending (Terlama / Terkecil / A-Z)"],
+        horizontal=True,
+        key="sort_order_hist"
+    )
+
+# Filter logic Histori
+filtered_hist = []
 for h in history_list:
-    if syariah_hist_filter == "🕌 Hanya Syariah" and not h["is_syariah"]:
+    if syariah_hist_filter == "Hanya Syariah (ISSI)" and not h["is_syariah"]:
         continue
     if syariah_hist_filter == "Hanya Non-Syariah" and h["is_syariah"]:
         continue
+    if search_hist_query:
+        qh = search_hist_query.upper().strip()
+        if qh not in h["ticker"].upper():
+            continue
+    if not is_date_in_filter(h["awakened_date"], date_filter_hist):
+        continue
+    filtered_hist.append(h)
 
+# Sorting logic Histori
+is_hist_asc = "Ascending" in sort_order_hist
+if sort_col_hist == "Tanggal Bangun":
+    filtered_hist.sort(key=lambda x: str(x["awakened_date"]), reverse=not is_hist_asc)
+elif sort_col_hist == "Tanggal Masuk":
+    filtered_hist.sort(key=lambda x: str(x["entry_date"]), reverse=not is_hist_asc)
+elif sort_col_hist == "Realisasi Cuan (%)":
+    filtered_hist.sort(key=lambda x: x["gain_pct"], reverse=not is_hist_asc)
+elif sort_col_hist == "Lama Hold":
+    filtered_hist.sort(key=lambda x: x.get("hold_days", 0), reverse=not is_hist_asc)
+elif sort_col_hist == "Kode Saham":
+    filtered_hist.sort(key=lambda x: x["ticker"], reverse=not is_hist_asc)
+elif sort_col_hist == "Harga Masuk":
+    filtered_hist.sort(key=lambda x: x["entry_price"], reverse=not is_hist_asc)
+elif sort_col_hist == "Harga Jual":
+    filtered_hist.sort(key=lambda x: x["exit_price"], reverse=not is_hist_asc)
+
+# Siapkan DataFrame Histori (Tanpa Kolom Nama)
+display_hist = []
+for h in filtered_hist:
     display_hist.append({
         "Kode": h["ticker"],
-        "Nama": h["name"],
         "Syariah": "🕌 Syariah" if h["is_syariah"] else "Non-Syariah",
-        "Periode": f"{h['entry_date']} ➔ {h['awakened_date']}",
+        "Tgl Masuk": h["entry_date"],
+        "Tgl Bangun": h["awakened_date"],
         "Lama Hold": f"{h['hold_days']} Hari Kerja",
-        "Harga Masuk": f"Rp {h['entry_price']}",
-        "Harga Jual": f"Rp {h['exit_price']}",
-        "Realisasi Cuan": f"+{h['gain_pct']:.2f}%",
+        "Harga Masuk": h["entry_price"],
+        "Harga Jual": h["exit_price"],
+        "Realisasi Cuan (%)": round(h["gain_pct"], 2),
         "Status Exit": h["status_exit"],
         "Catatan": h.get("note", "-")
     })
 
 df_hist = pd.DataFrame(display_hist)
 if not df_hist.empty:
-    st.dataframe(df_hist, use_container_width=True, hide_index=True)
+    st.dataframe(
+        df_hist,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
+            "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d"),
+            "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%"),
+            "Kode": st.column_config.TextColumn("Kode"),
+            "Syariah": st.column_config.TextColumn("Syariah"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
+            "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun"),
+            "Lama Hold": st.column_config.TextColumn("Lama Hold"),
+            "Status Exit": st.column_config.TextColumn("Status Exit"),
+            "Catatan": st.column_config.TextColumn("Catatan"),
+        }
+    )
     csv_hist = df_hist.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
         label="📥 Export Histori Cuan ke .CSV",
@@ -482,4 +826,4 @@ if not df_hist.empty:
         mime="text/csv"
     )
 else:
-    st.info("Belum ada histori saham yang selesai.")
+    st.info("Tidak ada riwayat histori yang sesuai dengan filter.")

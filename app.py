@@ -276,11 +276,15 @@ winrate = (win_count / total_closed * 100) if total_closed > 0 else 0.0
 total_gain = sum(h["gain_pct"] for h in history_list)
 avg_gain = (total_gain / total_closed) if total_closed > 0 else 0.0
 
-# Hitung Siaga Dekat TP
+# Hitung Siaga Dekat TP / Floating Profit
 near_tp_count = 0
 for s in active_list:
-    if s["current_price"] > s["entry_price"] and s["current_price"] < s["tp1"]:
-        near_tp_count += 1
+    entry = s.get("entry_price", 0)
+    curr = s.get("current_price", 0)
+    tp1 = s.get("tp1") or 0
+    if curr > entry:
+        if tp1 == 0 or curr < tp1:
+            near_tp_count += 1
 
 m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Saham Aktif Dipantau", f"{len(active_list)} Emiten", f"{sum(1 for s in active_list if s['is_syariah'])} Syariah")
@@ -341,21 +345,28 @@ for s in filtered_active:
     entry = s["entry_price"]
     curr = s["current_price"]
     gain_pct = ((curr - entry) / entry * 100) if entry > 0 else 0.0
-    tp1_pct = ((s["tp1"] - entry) / entry * 100) if entry > 0 else 0.0
-    tp2_pct = ((s["tp2"] - entry) / entry * 100) if entry > 0 else 0.0
-    tp3_pct = ((s["tp3"] - entry) / entry * 100) if entry > 0 else 0.0
+    
+    tp1_val = s.get("tp1") or 0
+    tp2_val = s.get("tp2") or 0
+    tp3_val = s.get("tp3") or 0
+
+    tp1_str = f"Rp {tp1_val} (+{((tp1_val - entry) / entry * 100):.1f}%)" if tp1_val > 0 else "-"
+    tp2_str = f"Rp {tp2_val} (+{((tp2_val - entry) / entry * 100):.1f}%)" if tp2_val > 0 else "-"
+    tp3_str = f"Rp {tp3_val} (+{((tp3_val - entry) / entry * 100):.1f}%)" if tp3_val > 0 else "-"
     hold_work_days = calculate_working_days(s["entry_date"])
 
-    # Status
-    if curr >= s["tp3"]:
+    # Status Dinamis
+    if tp3_val > 0 and curr >= tp3_val:
         status = "TP 3 TERCAPAI 🏆"
-    elif curr >= s["tp2"]:
+    elif tp2_val > 0 and curr >= tp2_val:
         status = "TP 2 TEMBUS 🎯"
-    elif curr >= s["tp1"]:
+    elif tp1_val > 0 and curr >= tp1_val:
         status = "TP 1 TERCAPAI 🎯"
-    elif curr > entry:
-        diff_tp1 = s["tp1"] - curr
+    elif tp1_val > 0 and curr > entry:
+        diff_tp1 = tp1_val - curr
         status = f"DEKAT TP 1 (Sisa {diff_tp1} pt) ⚡"
+    elif curr > entry:
+        status = f"FLOATING PROFIT 📈 (+{gain_pct:.1f}%)"
     else:
         status = "MASIH TIDUR 💤"
 
@@ -367,9 +378,9 @@ for s in filtered_active:
         "Harga Masuk": entry,
         "Harga Sekarang": curr,
         "Floating Gain (%)": round(gain_pct, 2),
-        "TP 1": f"Rp {s['tp1']} (+{tp1_pct:.1f}%)",
-        "TP 2": f"Rp {s['tp2']} (+{tp2_pct:.1f}%)",
-        "TP 3": f"Rp {s['tp3']} (+{tp3_pct:.1f}%)",
+        "TP 1": tp1_str,
+        "TP 2": tp2_str,
+        "TP 3": tp3_str,
         "Papan": "FCA" if s.get("is_fca") else "Reguler",
         "Status": status
     })
@@ -458,6 +469,7 @@ if is_editor:
 
             if st.button("🎉 Konfirmasi Bungkus Cuan ➔ Pindah ke Histori", type="primary"):
                 work_days = calculate_working_days(selected_stock["entry_date"])
+                tp1_target = selected_stock.get("tp1") or 0
                 new_hist = {
                     "ticker": selected_stock["ticker"],
                     "is_syariah": selected_stock["is_syariah"],
@@ -467,7 +479,7 @@ if is_editor:
                     "entry_price": entry_p,
                     "exit_price": exit_price,
                     "gain_pct": round(realized_gain, 2),
-                    "status_exit": "BUNGKUS MANUAL 💰" if exit_price < selected_stock["tp1"] else "TARGET TP TERCAPAI 🎯",
+                    "status_exit": "TARGET TP TERCAPAI 🎯" if (tp1_target > 0 and exit_price >= tp1_target) else "BUNGKUS MANUAL 💰",
                     "note": exit_reason
                 }
                 data["awakened_history"].insert(0, new_hist)
@@ -493,9 +505,9 @@ if is_editor:
                 new_entry_date = st.date_input("Tanggal Masuk Watchlist:", datetime.date.today())
                 new_entry_price = st.number_input("Harga Waktu Masuk (Rp):", min_value=1, value=50)
             with a3:
-                new_tp1 = st.number_input("Target TP 1 (Rp):", min_value=1, value=58)
-                new_tp2 = st.number_input("Target TP 2 (Rp):", min_value=1, value=65)
-                new_tp3 = st.number_input("Target TP 3 (Rp):", min_value=1, value=75)
+                new_tp1 = st.number_input("Target TP 1 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 1")
+                new_tp2 = st.number_input("Target TP 2 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 2")
+                new_tp3 = st.number_input("Target TP 3 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 3")
 
             submitted = st.form_submit_button("Simpan Saham ke Watchlist 🚀")
             if submitted:
@@ -510,9 +522,9 @@ if is_editor:
                         "entry_date": str(new_entry_date),
                         "entry_price": int(new_entry_price),
                         "current_price": int(new_entry_price),
-                        "tp1": int(new_tp1),
-                        "tp2": int(new_tp2),
-                        "tp3": int(new_tp3),
+                        "tp1": int(new_tp1) if new_tp1 > 0 else 0,
+                        "tp2": int(new_tp2) if new_tp2 > 0 else 0,
+                        "tp3": int(new_tp3) if new_tp3 > 0 else 0,
                         "is_fca": new_fca
                     }
                     data["active_stocks"].append(new_item)
@@ -536,9 +548,9 @@ if is_editor:
                     "Tgl Masuk": s["entry_date"],
                     "Harga Masuk": int(s["entry_price"]),
                     "Harga Sekarang": int(s["current_price"]),
-                    "TP 1": int(s["tp1"]),
-                    "TP 2": int(s["tp2"]),
-                    "TP 3": int(s["tp3"]),
+                    "TP 1": int(s.get("tp1") or 0),
+                    "TP 2": int(s.get("tp2") or 0),
+                    "TP 3": int(s.get("tp3") or 0),
                     "Syariah": bool(s["is_syariah"]),
                     "FCA": bool(s.get("is_fca", False))
                 })
@@ -552,9 +564,9 @@ if is_editor:
                     "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", disabled=True),
                     "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
                     "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang (Rp)", min_value=1, step=1, format="%d"),
-                    "TP 1": st.column_config.NumberColumn("Target TP 1 (Rp)", min_value=1, step=1, format="%d"),
-                    "TP 2": st.column_config.NumberColumn("Target TP 2 (Rp)", min_value=1, step=1, format="%d"),
-                    "TP 3": st.column_config.NumberColumn("Target TP 3 (Rp)", min_value=1, step=1, format="%d"),
+                    "TP 1": st.column_config.NumberColumn("Target TP 1 (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
+                    "TP 2": st.column_config.NumberColumn("Target TP 2 (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
+                    "TP 3": st.column_config.NumberColumn("Target TP 3 (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
                     "Syariah": st.column_config.CheckboxColumn("Syariah (ISSI)"),
                     "FCA": st.column_config.CheckboxColumn("Papan FCA"),
                 },
@@ -583,9 +595,9 @@ if is_editor:
                             r = ticker_dict[s["ticker"]]
                             s["entry_price"] = int(r["Harga Masuk"])
                             s["current_price"] = int(r["Harga Sekarang"])
-                            s["tp1"] = int(r["TP 1"])
-                            s["tp2"] = int(r["TP 2"])
-                            s["tp3"] = int(r["TP 3"])
+                            s["tp1"] = int(r["TP 1"]) if (pd.notna(r["TP 1"]) and r["TP 1"] > 0) else 0
+                            s["tp2"] = int(r["TP 2"]) if (pd.notna(r["TP 2"]) and r["TP 2"] > 0) else 0
+                            s["tp3"] = int(r["TP 3"]) if (pd.notna(r["TP 3"]) and r["TP 3"] > 0) else 0
                             s["is_syariah"] = bool(r["Syariah"])
                             s["is_fca"] = bool(r["FCA"])
                     save_data(data)

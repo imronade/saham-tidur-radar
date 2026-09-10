@@ -534,6 +534,8 @@ st.markdown("---")
 col_tbl_title, col_tbl_refresh = st.columns([3.6, 1.4])
 with col_tbl_title:
     st.subheader("📋 Daftar Saham Tidur (Aktif Dipantau)")
+    if is_editor:
+        st.caption("💡 *Mode Editor Aktif*: Untuk mengedit angka/SL/TP atau menghapus baris watchlist, gunakan tab **⚙️ Kelola Watchlist** di Panel Aksi Editor di bawah.")
 with col_tbl_refresh:
     if st.button("🔄 Refresh Harga Terkini", key="btn_refresh_watchlist_table", use_container_width=True, help="Klik untuk memperbarui harga bursa terkini secara manual"):
         with st.spinner("Mengambil harga penutupan bursa..."):
@@ -692,13 +694,14 @@ if is_editor:
             st.session_state["is_editor"] = False
             st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
             st.rerun()
-    tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_hist = st.tabs([
+    tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_cuan, tab_manage_gagal = st.tabs([
         "⚡ Quick Import Stockbit",
         "💰 Bungkus Cuan (Take Profit)",
         "🛑 Realisasi SL (Gagal Bangun)",
         "➕ Tambah Satuan",
         "⚙️ Kelola Watchlist (Centang Hapus / Edit)",
-        "📜 Kelola Histori (Bangun & Gagal Bangun)"
+        "🏆 Kelola Histori Bangun (Centang Hapus / Edit)",
+        "🛑 Kelola Gagal Bangun (Centang Hapus / Edit)"
     ])
 
     # ----------------------------------------------------
@@ -709,39 +712,39 @@ if is_editor:
         st.markdown("""
         Salin langsung seluruh teks hasil tabel screener dari Stockbit ke kotak di bawah.
         Kedua kolom bersifat **fleksibel / opsional**: Anda dapat mengisi **salah satu saja** atau **kedua-duanya sekaligus**.
+        Setelah tombol proses diklik, **kotak isian otomatis kembali kosong (blank)** agar siap untuk screening berikutnya.
         """)
 
         st.info("🛡️ **Proteksi Anti-Duplikasi Aktif**: Saham yang sudah tercatat di watchlist tidak akan terduplikasi. Tanggal masuk pertama dan harga modal awal akan **tetap dikunci (dipertahankan)**.")
 
-        col_syariah, col_non_syariah = st.columns(2)
-        with col_syariah:
-            st.markdown("##### 🕌 1. Screener Syariah (Universe: ISSI)")
-            st.caption("Tempel hasil screener Stockbit dengan filter **Stock Universe: ISSI** di sini. Otomatis ditandai **Syariah**.")
-            screener_syariah = st.text_area(
-                "Teks Screener Syariah (ISSI):",
-                height=190,
-                placeholder="Contoh:\nSymbol\nPrice\n[MSKY](https://stockbit.com/symbol/MSKY)\n66.00\n[ASPR](https://stockbit.com/symbol/ASPR)\n146.00\n...",
-                key="screener_syariah_area",
-                help="Seluruh emiten di kolom ini otomatis dicatat sebagai Saham Syariah (ISSI)."
-            )
+        with st.form("form_quick_import_stockbit", clear_on_submit=True):
+            col_syariah, col_non_syariah = st.columns(2)
+            with col_syariah:
+                st.markdown("##### 🕌 1. Screener Syariah (Universe: ISSI)")
+                st.caption("Tempel hasil screener Stockbit dengan filter **Stock Universe: ISSI** di sini. Otomatis ditandai **Syariah**.")
+                screener_syariah = st.text_area(
+                    "Teks Screener Syariah (ISSI):",
+                    height=190,
+                    placeholder="Contoh:\nSymbol\nPrice\n[MSKY](https://stockbit.com/symbol/MSKY)\n66.00\n[ASPR](https://stockbit.com/symbol/ASPR)\n146.00\n...",
+                    key="screener_syariah_area",
+                    help="Seluruh emiten di kolom ini otomatis dicatat sebagai Saham Syariah (ISSI)."
+                )
 
-        with col_non_syariah:
-            st.markdown("##### 🏢 2. Screener IHSG / Non-Syariah *(Opsional)*")
-            st.caption("Tempel hasil screener Stockbit dengan filter **Stock Universe: IHSG / All Stocks** di sini.")
-            screener_non_syariah = st.text_area(
-                "Teks Screener IHSG / Non-Syariah (Opsional):",
-                height=190,
-                placeholder="Contoh:\nSymbol\nPrice\n[BBRI](https://stockbit.com/symbol/BBRI)\n5000.00\n...",
-                key="screener_non_syariah_area",
-                help="Jika Kolom 1 diisi, emiten di Kolom 2 yang tidak ada di Kolom 1 otomatis ditandai Non-Syariah."
-            )
+            with col_non_syariah:
+                st.markdown("##### 🏢 2. Screener IHSG / Non-Syariah *(Opsional)*")
+                st.caption("Tempel hasil screener Stockbit dengan filter **Stock Universe: IHSG / All Stocks** di sini.")
+                screener_non_syariah = st.text_area(
+                    "Teks Screener IHSG / Non-Syariah (Opsional):",
+                    height=190,
+                    placeholder="Contoh:\nSymbol\nPrice\n[BBRI](https://stockbit.com/symbol/BBRI)\n5000.00\n...",
+                    key="screener_non_syariah_area",
+                    help="Jika Kolom 1 diisi, emiten di Kolom 2 yang tidak ada di Kolom 1 otomatis ditandai Non-Syariah."
+                )
 
-        qc1, qc2 = st.columns(2)
-        with qc1:
-            batch_entry_date = st.date_input("Tanggal Masuk untuk Saham Baru:", datetime.date.today(), key="batch_date_in")
-        with qc2:
-            right_only_mode = "🏢 Tandai Seluruhnya sebagai Non-Syariah"
-            if screener_non_syariah.strip() and not screener_syariah.strip():
+            qc1, qc2 = st.columns(2)
+            with qc1:
+                batch_entry_date = st.date_input("Tanggal Masuk untuk Saham Baru:", datetime.date.today(), key="batch_date_in")
+            with qc2:
                 right_only_mode = st.radio(
                     "Perlakuan Kolom Kanan (karena Kolom Kiri kosong):",
                     ["🏢 Tandai Seluruhnya sebagai Non-Syariah", "🕌 Tandai Seluruhnya sebagai Syariah"],
@@ -749,10 +752,11 @@ if is_editor:
                     key="right_only_syariah_mode",
                     horizontal=True
                 )
-            else:
                 st.caption("💡 **Auto-Deteksi**: Jika kedua kolom diisi, emiten yang hanya ada di Kolom Kanan otomatis diklasifikasikan sebagai **🏢 Non-Syariah**.")
 
-        if st.button("🚀 Proses & Impor Saham ke Watchlist", type="primary", use_container_width=True, key="btn_process_batch_import"):
+            btn_submit_batch = st.form_submit_button("🚀 Proses & Impor Saham ke Watchlist", type="primary", use_container_width=True)
+
+        if btn_submit_batch:
             text_syariah = screener_syariah.strip()
             text_non = screener_non_syariah.strip()
 
@@ -1095,175 +1099,177 @@ if is_editor:
             st.info("Watchlist kosong, belum ada saham untuk diedit/dihapus.")
 
     # ----------------------------------------------------
-    # TAB 6: KELOLA HISTORI (BANGUN & GAGAL BANGUN)
+    # TAB 6: KELOLA HISTORI SAHAM BANGUN (CUAN)
     # ----------------------------------------------------
-    with tab_manage_hist:
-        st.markdown("##### 📜 Edit & Hapus Data Histori")
-        st.caption("Kelola riwayat saham yang berhasil bangun maupun yang terkena cut loss/SL.")
-        sub_hist_cuan, sub_hist_gagal = st.tabs(["🏆 Histori Saham Bangun (Cuan)", "🛑 Histori Gagal Bangun (Kena SL)"])
+    with tab_manage_cuan:
+        st.markdown("##### 🏆 Kelola Histori Saham Bangun (Cuan)")
+        st.caption("Edit data (Harga Jual, Tanggal, Status Exit, Catatan) atau centang baris untuk menghapus histori.")
+        if history_list:
+            hist_rows = []
+            for idx, h in enumerate(history_list):
+                hist_rows.append({
+                    "Hapus": False,
+                    "_id": idx,
+                    "Kode": h["ticker"],
+                    "Tgl Masuk": h["entry_date"],
+                    "Tgl Bangun": h["awakened_date"],
+                    "Harga Masuk": int(h["entry_price"]),
+                    "Harga Jual": int(h["exit_price"]),
+                    "Status Exit": h.get("status_exit", "BUNGKUS MANUAL 💰"),
+                    "Catatan": h.get("note", "")
+                })
+            df_manage_hist = pd.DataFrame(hist_rows)
 
-        with sub_hist_cuan:
-            if history_list:
-                hist_rows = []
-                for idx, h in enumerate(history_list):
-                    hist_rows.append({
-                        "Hapus": False,
-                        "_id": idx,
-                        "Kode": h["ticker"],
-                        "Tgl Masuk": h["entry_date"],
-                        "Tgl Bangun": h["awakened_date"],
-                        "Harga Masuk": int(h["entry_price"]),
-                        "Harga Jual": int(h["exit_price"]),
-                        "Status Exit": h.get("status_exit", "BUNGKUS MANUAL 💰"),
-                        "Catatan": h.get("note", "")
-                    })
-                df_manage_hist = pd.DataFrame(hist_rows)
+            edited_hist_df = st.data_editor(
+                df_manage_hist,
+                column_config={
+                    "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
+                    "_id": None,  # disembunyikan
+                    "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
+                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk (YYYY-MM-DD)"),
+                    "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun (YYYY-MM-DD)"),
+                    "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
+                    "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
+                    "Status Exit": st.column_config.TextColumn("Status Exit"),
+                    "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit"),
+                },
+                hide_index=True,
+                use_container_width=True,
+                key="table_editor_hist"
+            )
 
-                edited_hist_df = st.data_editor(
-                    df_manage_hist,
-                    column_config={
-                        "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
-                        "_id": None,  # disembunyikan
-                        "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
-                        "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk (YYYY-MM-DD)"),
-                        "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun (YYYY-MM-DD)"),
-                        "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
-                        "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
-                        "Status Exit": st.column_config.TextColumn("Status Exit"),
-                        "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit"),
-                    },
-                    hide_index=True,
-                    use_container_width=True,
-                    key="table_editor_hist"
-                )
-
-                hcol1, hcol2 = st.columns(2)
-                with hcol1:
-                    if st.button("🗑️ Hapus Histori Cuan yang Dicentang", type="secondary", use_container_width=True, key="btn_del_hist_cuan"):
-                        delete_ids = edited_hist_df[edited_hist_df["Hapus"] == True]["_id"].tolist()
-                        if not delete_ids:
-                            st.warning("Silakan centang minimal satu baris histori di kolom 'Pilih Hapus 🗑️' terlebih dahulu.")
-                        else:
-                            data["awakened_history"] = [h for idx, h in enumerate(data["awakened_history"]) if idx not in delete_ids]
-                            save_data(data)
-                            st.success(f"Berhasil menghapus {len(delete_ids)} data histori cuan.")
-                            st.rerun()
-
-                with hcol2:
-                    if st.button("💾 Simpan Perubahan Data Histori Cuan", type="primary", use_container_width=True, key="btn_save_hist_cuan"):
-                        new_hist_list = []
-                        for _, r in edited_hist_df.iterrows():
-                            entry_p = int(r["Harga Masuk"])
-                            exit_p = int(r["Harga Jual"])
-                            recalculated_gain = round(((exit_p - entry_p) / entry_p * 100), 2) if entry_p > 0 else 0.0
-                            tgl_masuk = str(r["Tgl Masuk"]).strip()
-                            tgl_bangun = str(r["Tgl Bangun"]).strip()
-                            hold_days = calculate_working_days(tgl_masuk, tgl_bangun)
-                            
-                            orig_idx = int(r["_id"])
-                            orig_syariah = data["awakened_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["awakened_history"]) else True
-                            
-                            new_hist_list.append({
-                                "ticker": str(r["Kode"]),
-                                "is_syariah": orig_syariah,
-                                "entry_date": tgl_masuk,
-                                "awakened_date": tgl_bangun,
-                                "hold_days": hold_days,
-                                "entry_price": entry_p,
-                                "exit_price": exit_p,
-                                "gain_pct": recalculated_gain,
-                                "status_exit": str(r["Status Exit"]),
-                                "note": str(r["Catatan"])
-                            })
-                        data["awakened_history"] = new_hist_list
+            hcol1, hcol2 = st.columns(2)
+            with hcol1:
+                if st.button("🗑️ Hapus Histori Cuan yang Dicentang", type="secondary", use_container_width=True, key="btn_del_hist_cuan"):
+                    delete_ids = edited_hist_df[edited_hist_df["Hapus"] == True]["_id"].tolist()
+                    if not delete_ids:
+                        st.warning("Silakan centang minimal satu baris histori di kolom 'Pilih Hapus 🗑️' terlebih dahulu.")
+                    else:
+                        data["awakened_history"] = [h for idx, h in enumerate(data["awakened_history"]) if idx not in delete_ids]
                         save_data(data)
-                        st.success("Perubahan data histori saham bangun berhasil disimpan!")
+                        st.success(f"Berhasil menghapus {len(delete_ids)} data histori cuan.")
                         st.rerun()
-            else:
-                st.info("Belum ada histori saham bangun untuk diedit/dihapus.")
 
-        with sub_hist_gagal:
-            failed_history_data = data.get("failed_history", [])
-            if failed_history_data:
-                gagal_rows = []
-                for idx, g in enumerate(failed_history_data):
-                    gagal_rows.append({
-                        "Hapus": False,
-                        "_id": idx,
-                        "Kode": g["ticker"],
-                        "Tgl Masuk": g.get("entry_date", "-"),
-                        "Tgl Cut Loss": g.get("exit_date", "-"),
-                        "Harga Masuk": int(g.get("entry_price", 0)),
-                        "Harga Jual": int(g.get("exit_price", 0)),
-                        "SL Terpasang": int(g.get("sl", 0)),
-                        "Status Exit": g.get("status_exit", "KENA SL 🛑"),
-                        "Catatan": g.get("note", "")
-                    })
-                df_manage_gagal = pd.DataFrame(gagal_rows)
-                edited_gagal_df = st.data_editor(
-                    df_manage_gagal,
-                    column_config={
-                        "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
-                        "_id": None,
-                        "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
-                        "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk (YYYY-MM-DD)"),
-                        "Tgl Cut Loss": st.column_config.TextColumn("Tgl Cut Loss (YYYY-MM-DD)"),
-                        "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
-                        "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
-                        "SL Terpasang": st.column_config.NumberColumn("SL Terpasang (Rp)", min_value=0, step=1, format="%d"),
-                        "Status Exit": st.column_config.TextColumn("Status Exit"),
-                        "Catatan": st.column_config.TextColumn("Catatan / Alasan Cut Loss"),
-                    },
-                    hide_index=True,
-                    use_container_width=True,
-                    key="table_editor_gagal"
-                )
+            with hcol2:
+                if st.button("💾 Simpan Perubahan Data Histori Cuan", type="primary", use_container_width=True, key="btn_save_hist_cuan"):
+                    new_hist_list = []
+                    for _, r in edited_hist_df.iterrows():
+                        entry_p = int(r["Harga Masuk"])
+                        exit_p = int(r["Harga Jual"])
+                        recalculated_gain = round(((exit_p - entry_p) / entry_p * 100), 2) if entry_p > 0 else 0.0
+                        tgl_masuk = str(r["Tgl Masuk"]).strip()
+                        tgl_bangun = str(r["Tgl Bangun"]).strip()
+                        hold_days = calculate_working_days(tgl_masuk, tgl_bangun)
+                        
+                        orig_idx = int(r["_id"])
+                        orig_syariah = data["awakened_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["awakened_history"]) else True
+                        
+                        new_hist_list.append({
+                            "ticker": str(r["Kode"]),
+                            "is_syariah": orig_syariah,
+                            "entry_date": tgl_masuk,
+                            "awakened_date": tgl_bangun,
+                            "hold_days": hold_days,
+                            "entry_price": entry_p,
+                            "exit_price": exit_p,
+                            "gain_pct": recalculated_gain,
+                            "status_exit": str(r["Status Exit"]),
+                            "note": str(r["Catatan"])
+                        })
+                    data["awakened_history"] = new_hist_list
+                    save_data(data)
+                    st.success("Perubahan data histori saham bangun berhasil disimpan!")
+                    st.rerun()
+        else:
+            st.info("Belum ada histori saham bangun untuk diedit/dihapus.")
 
-                gcol1, gcol2 = st.columns(2)
-                with gcol1:
-                    if st.button("🗑️ Hapus Histori Gagal yang Dicentang", type="secondary", use_container_width=True, key="btn_del_gagal"):
-                        del_gagal_ids = edited_gagal_df[edited_gagal_df["Hapus"] == True]["_id"].tolist()
-                        if not del_gagal_ids:
-                            st.warning("Silakan centang minimal satu baris yang ingin dihapus.")
-                        else:
-                            data["failed_history"] = [g for idx, g in enumerate(data["failed_history"]) if idx not in del_gagal_ids]
-                            save_data(data)
-                            st.success(f"Berhasil menghapus {len(del_gagal_ids)} data histori gagal bangun.")
-                            st.rerun()
+    # ----------------------------------------------------
+    # TAB 7: KELOLA GAGAL BANGUN (CUT LOSS / KENA SL)
+    # ----------------------------------------------------
+    with tab_manage_gagal:
+        st.markdown("##### 🛑 Kelola Saham Gagal Bangun (Terkena SL / Cut Loss)")
+        st.caption("Edit data (Harga Cut Loss, Level SL, Tanggal, Status Exit, Alasan) atau centang baris untuk menghapus histori.")
+        failed_history_data = data.get("failed_history", [])
+        if failed_history_data:
+            gagal_rows = []
+            for idx, g in enumerate(failed_history_data):
+                gagal_rows.append({
+                    "Hapus": False,
+                    "_id": idx,
+                    "Kode": g["ticker"],
+                    "Tgl Masuk": g.get("entry_date", "-"),
+                    "Tgl Cut Loss": g.get("exit_date", "-"),
+                    "Harga Masuk": int(g.get("entry_price", 0)),
+                    "Harga Jual": int(g.get("exit_price", 0)),
+                    "SL Terpasang": int(g.get("sl", 0)),
+                    "Status Exit": g.get("status_exit", "KENA SL 🛑"),
+                    "Catatan": g.get("note", "")
+                })
+            df_manage_gagal = pd.DataFrame(gagal_rows)
+            edited_gagal_df = st.data_editor(
+                df_manage_gagal,
+                column_config={
+                    "Hapus": st.column_config.CheckboxColumn("Pilih Hapus 🗑️", help="Centang baris yang ingin dihapus", default=False),
+                    "_id": None,
+                    "Kode": st.column_config.TextColumn("Kode Saham", disabled=True),
+                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk (YYYY-MM-DD)"),
+                    "Tgl Cut Loss": st.column_config.TextColumn("Tgl Cut Loss (YYYY-MM-DD)"),
+                    "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
+                    "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
+                    "SL Terpasang": st.column_config.NumberColumn("SL Terpasang (Rp)", min_value=0, step=1, format="%d"),
+                    "Status Exit": st.column_config.TextColumn("Status Exit"),
+                    "Catatan": st.column_config.TextColumn("Catatan / Alasan Cut Loss"),
+                },
+                hide_index=True,
+                use_container_width=True,
+                key="table_editor_gagal"
+            )
 
-                with gcol2:
-                    if st.button("💾 Simpan Perubahan Histori Gagal", type="primary", use_container_width=True, key="btn_save_gagal"):
-                        new_failed_list = []
-                        for _, r in edited_gagal_df.iterrows():
-                            entry_p = int(r["Harga Masuk"])
-                            exit_p = int(r["Harga Jual"])
-                            recalculated_loss = round(((exit_p - entry_p) / entry_p * 100), 2) if entry_p > 0 else 0.0
-                            tgl_masuk = str(r["Tgl Masuk"]).strip()
-                            tgl_cut = str(r["Tgl Cut Loss"]).strip()
-                            hold_days = calculate_working_days(tgl_masuk, tgl_cut)
-
-                            orig_idx = int(r["_id"])
-                            orig_syariah = data["failed_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["failed_history"]) else True
-
-                            new_failed_list.append({
-                                "ticker": str(r["Kode"]),
-                                "is_syariah": orig_syariah,
-                                "entry_date": tgl_masuk,
-                                "exit_date": tgl_cut,
-                                "hold_days": hold_days,
-                                "entry_price": entry_p,
-                                "exit_price": exit_p,
-                                "loss_pct": recalculated_loss,
-                                "sl": int(r["SL Terpasang"]),
-                                "status_exit": str(r["Status Exit"]),
-                                "note": str(r["Catatan"])
-                            })
-                        data["failed_history"] = new_failed_list
+            gcol1, gcol2 = st.columns(2)
+            with gcol1:
+                if st.button("🗑️ Hapus Histori Gagal yang Dicentang", type="secondary", use_container_width=True, key="btn_del_gagal"):
+                    del_gagal_ids = edited_gagal_df[edited_gagal_df["Hapus"] == True]["_id"].tolist()
+                    if not del_gagal_ids:
+                        st.warning("Silakan centang minimal satu baris yang ingin dihapus.")
+                    else:
+                        data["failed_history"] = [g for idx, g in enumerate(data["failed_history"]) if idx not in del_gagal_ids]
                         save_data(data)
-                        st.success("Perubahan data histori gagal bangun berhasil disimpan!")
+                        st.success(f"Berhasil menghapus {len(del_gagal_ids)} data histori gagal bangun.")
                         st.rerun()
-            else:
-                st.info("Belum ada histori saham gagal bangun untuk diedit/dihapus.")
+
+            with gcol2:
+                if st.button("💾 Simpan Perubahan Histori Gagal", type="primary", use_container_width=True, key="btn_save_gagal"):
+                    new_failed_list = []
+                    for _, r in edited_gagal_df.iterrows():
+                        entry_p = int(r["Harga Masuk"])
+                        exit_p = int(r["Harga Jual"])
+                        recalculated_loss = round(((exit_p - entry_p) / entry_p * 100), 2) if entry_p > 0 else 0.0
+                        tgl_masuk = str(r["Tgl Masuk"]).strip()
+                        tgl_cut = str(r["Tgl Cut Loss"]).strip()
+                        hold_days = calculate_working_days(tgl_masuk, tgl_cut)
+
+                        orig_idx = int(r["_id"])
+                        orig_syariah = data["failed_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["failed_history"]) else True
+
+                        new_failed_list.append({
+                            "ticker": str(r["Kode"]),
+                            "is_syariah": orig_syariah,
+                            "entry_date": tgl_masuk,
+                            "exit_date": tgl_cut,
+                            "hold_days": hold_days,
+                            "entry_price": entry_p,
+                            "exit_price": exit_p,
+                            "loss_pct": recalculated_loss,
+                            "sl": int(r["SL Terpasang"]),
+                            "status_exit": str(r["Status Exit"]),
+                            "note": str(r["Catatan"])
+                        })
+                    data["failed_history"] = new_failed_list
+                    save_data(data)
+                    st.success("Perubahan data histori gagal bangun berhasil disimpan!")
+                    st.rerun()
+        else:
+            st.info("Belum ada histori saham gagal bangun untuk diedit/dihapus.")
 
 st.markdown("---")
 
@@ -1271,6 +1277,8 @@ st.markdown("---")
 # TABEL 2: SAHAM YANG SUDAH BANGUN (HISTORI)
 # ==========================================
 st.subheader("🏆 Saham yang Sudah Bangun / Dibungkus Cuan (Histori)")
+if is_editor:
+    st.caption("💡 *Mode Editor Aktif*: Untuk mengedit angka/catatan atau menghapus baris histori cuan, gunakan tab **🏆 Kelola Histori Bangun** di Panel Aksi Editor di atas.")
 
 # Filter Bar Histori
 hf_col1, hf_col2, hf_col3 = st.columns([1.5, 1.5, 2])
@@ -1362,6 +1370,8 @@ st.markdown("---")
 # TABEL 3: SAHAM GAGAL BANGUN (TERKENA SL / CUT LOSS)
 # ==========================================
 st.subheader("🛑 Saham Gagal Bangun / Terkena SL (Histori Cut Loss)")
+if is_editor:
+    st.caption("💡 *Mode Editor Aktif*: Untuk mengedit angka/catatan atau menghapus baris cut loss, gunakan tab **🛑 Kelola Gagal Bangun** di Panel Aksi Editor di atas.")
 
 # Filter Bar Gagal Bangun
 gf_col1, gf_col2, gf_col3 = st.columns([1.5, 1.5, 2])

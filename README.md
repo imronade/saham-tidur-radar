@@ -56,11 +56,13 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
   * Cukup isi kolom kiri $\rightarrow$ seluruhnya masuk sebagai Syariah.
   * Cukup isi kolom kanan $\rightarrow$ seluruhnya masuk sebagai Non-Syariah.
   * Isi kedua kolom sekaligus $\rightarrow$ sistem otomatis memilah mana yang Syariah dan mana yang Non-Syariah secara cerdas dalam 1x klik.
+* **Auto-Reset Form ke Blank**: Setelah tombol *Proses & Impor* diklik, kedua kotak teks otomatis bersih kembali (kosong/blank) sehingga siap untuk aktivitas screening berikutnya.
 * **Ekstraksi Cerdas & Otomatis**: Mendukung format tabel mentah maupun markdown link Stockbit `[KODE](url)` dan otomatis mengambil harga di baris bawahnya.
 * **Proteksi Anti-Duplikasi (*First Entry Lock*)**: Emiten yang sudah ada di watchlist aktif tidak akan terduplikasi atau tertimpa, sehingga tanggal awal masuk dan modal harga awal tetap aman terlindungi.
 
 ### 8. 🛑 Tabel Saham Gagal Bangun (Histori Terkena SL / Cut Loss)
 * Tabel histori terpisah khusus mencatat saham-saham yang tidak berhasil bangun atau terpaksa di-cut loss karena menembus level Stop Loss.
+* **Pengelolaan Penuh di Mode Editor**: Dilengkapi tab khusus **🛑 Kelola Gagal Bangun** untuk mengedit angka realisasi rugi, level SL, tanggal cut loss, catatan/alasan, serta fitur centang hapus baris (*checkbox delete*).
 * Dilengkapi filter Syariah, pencarian kode saham, filter tanggal cut loss, dan tombol unduh CSV.
 * Terintegrasi langsung ke perhitungan statistik Win Rate trading agar hasil evaluasi performa trading selalu objektif dan realistis.
 

@@ -26,27 +26,43 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
   * Mengedit angka TP/harga dan menghapus baris data dengan sistem **centang tabel (*checkbox*)**.
   * Dilengkapi tombol **Exit / Keluar Mode Editor** untuk kembali ke mode publik dengan aman.
 
-### 2. 🎯 Multi-Target Take Profit (TP 1, TP 2, TP 3) Bersifat Opsional
-* Pengisian target Take Profit bersifat **fleksibel / opsional**: bisa diisi lengkap, sebagian, atau dikosongkan (ditampilkan tanda strip `-`).
-* Menghitung persentase potensi keuntungan terhadap harga masuk secara otomatis.
-* Status saham dinamis: mendeteksi `MASIH TIDUR 💤`, `FLOATING PROFIT 📈`, `DEKAT TP 1 ⚡`, hingga `TP 1/2/3 TERCAPAI 🎯/🏆`.
+### 2. 🎯 Multi-Target Take Profit (TP) & Stop Loss (SL) Manual
+* **Stop Loss (SL)**: Pengisian batas risiko manual (Rp) bersifat opsional. Mendeteksi status siaga `DEKAT SL 🚨` hingga `KENA SL 🛑`.
+* **Multi-Target Take Profit (TP 1, TP 2, TP 3)**: Pengisian target Take Profit fleksibel/opsional (bisa diisi lengkap, sebagian, atau dikosongkan `-`).
+* **Status Saham Dinamis Real-Time**: Otomatis mendeteksi `KENA SL 🛑`, `DEKAT SL 🚨`, `MASIH TIDUR 💤`, `FLOATING PROFIT 📈`, `FLOATING LOSS 🔻`, `DEKAT TP 1 ⚡`, hingga `TP 1/2/3 TERCAPAI 🎯/🏆`.
 
 ### 3. 📅 Perhitungan Durasi Hold Hari Kerja (Working Days)
 * Menghitung lama hold hanya pada **hari kerja aktif bursa (Senin – Jumat)**, tidak terdistorsi oleh hari libur akhir pekan (Sabtu & Minggu).
 
 ### 4. 📈 Evaluasi Win Rate & Rata-rata Cuan (All-Time & Bulanan)
-* **Winrate Total (All-Time)**: Menghitung persentase kemenangan dari seluruh riwayat trade yang pernah ada.
+* **Winrate Total (All-Time)**: Menghitung persentase kemenangan dari seluruh riwayat trade yang pernah selesai (Saham Bangun Cuan vs Saham Gagal Kena SL).
 * **Winrate Bulanan Dinamis**: Menampilkan performa khusus bulan terbaru secara default, serta dilengkapi dropdown untuk memilih dan mengevaluasi bulan-bulan sebelumnya.
-* **Komparasi Mendalam**: Panel rincian komparasi performa All-Time vs Bulan Terpilih, termasuk status floating profit saham aktif.
+* **Komparasi Mendalam**: Panel rincian komparasi performa All-Time vs Bulan Terpilih, termasuk status floating profit saham aktif dan siaga emiten yang terkena SL.
 
 ### 5. 🕌 Filter Saham Syariah (ISSI) & Papan FCA
 * Indikator jelas untuk saham Syariah (ISSI) dan saham Non-Syariah.
 * Penanda saham yang masuk **Papan Pemantauan Khusus / Full Call Auction (FCA)**.
 
 ### 6. 📥 Export ke File CSV
-* Tombol export instan untuk tabel **Watchlist Aktif** maupun **Histori Saham Bangun**.
+* Tombol export instan untuk **Watchlist Aktif**, **Histori Saham Bangun**, maupun **Histori Saham Gagal Bangun (SL)**.
 * Format UTF-8 BOM yang langsung terbaca rapi di Microsoft Excel.
 * **100% mengikuti filter yang sedang diterapkan di layar**.
+
+### 7. ⚡ Quick Import Stockbit (Dual Screener: Syariah & Non-Syariah)
+* **Dua Kolom Fleksibel (Kiri & Kanan)**:
+  * **Kolom Kiri (🕌 Syariah ISSI)**: Hasil screener Stockbit dengan filter Stock Universe = `ISSI` (otomatis ditandai Syariah).
+  * **Kolom Kanan (🏢 IHSG / Non-Syariah - Opsional)**: Hasil screener Stockbit dengan filter Universe `All Stocks` atau Non-Syariah.
+* **Bisa Diisi Salah Satu Saja atau Keduanya Sekaligus**:
+  * Cukup isi kolom kiri $\rightarrow$ seluruhnya masuk sebagai Syariah.
+  * Cukup isi kolom kanan $\rightarrow$ seluruhnya masuk sebagai Non-Syariah.
+  * Isi kedua kolom sekaligus $\rightarrow$ sistem otomatis memilah mana yang Syariah dan mana yang Non-Syariah secara cerdas dalam 1x klik.
+* **Ekstraksi Cerdas & Otomatis**: Mendukung format tabel mentah maupun markdown link Stockbit `[KODE](url)` dan otomatis mengambil harga di baris bawahnya.
+* **Proteksi Anti-Duplikasi (*First Entry Lock*)**: Emiten yang sudah ada di watchlist aktif tidak akan terduplikasi atau tertimpa, sehingga tanggal awal masuk dan modal harga awal tetap aman terlindungi.
+
+### 8. 🛑 Tabel Saham Gagal Bangun (Histori Terkena SL / Cut Loss)
+* Tabel histori terpisah khusus mencatat saham-saham yang tidak berhasil bangun atau terpaksa di-cut loss karena menembus level Stop Loss.
+* Dilengkapi filter Syariah, pencarian kode saham, filter tanggal cut loss, dan tombol unduh CSV.
+* Terintegrasi langsung ke perhitungan statistik Win Rate trading agar hasil evaluasi performa trading selalu objektif dan realistis.
 
 ---
 

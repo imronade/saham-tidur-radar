@@ -158,52 +158,88 @@ def load_data():
         initial_data = {
             "active_stocks": [
                 {
-                    "ticker": "FINN",
+                    "ticker": "DIST",
                     "is_syariah": True,
-                    "entry_date": "2026-08-01",
-                    "entry_price": 50,
-                    "current_price": 54,
-                    "sl": 48,
-                    "tp1": 56,
-                    "tp2": 62,
-                    "tp3": 70,
-                    "is_fca": True
-                },
-                {
-                    "ticker": "KBAG",
-                    "is_syariah": True,
-                    "entry_date": "2026-06-15",
+                    "entry_date": "2026-09-10",
                     "entry_price": 50,
                     "current_price": 50,
-                    "sl": 48,
-                    "tp1": 58,
-                    "tp2": 66,
-                    "tp3": 75,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
                     "is_fca": True
                 },
                 {
-                    "ticker": "MDLN",
+                    "ticker": "ROTI",
                     "is_syariah": True,
-                    "entry_date": "2026-05-20",
-                    "entry_price": 62,
-                    "current_price": 61,
-                    "sl": 58,
-                    "tp1": 70,
-                    "tp2": 80,
-                    "tp3": 92,
+                    "entry_date": "2026-09-10",
+                    "entry_price": 585,
+                    "current_price": 585,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
                     "is_fca": False
                 },
                 {
-                    "ticker": "POLU",
+                    "ticker": "GULA",
+                    "is_syariah": True,
+                    "entry_date": "2026-09-10",
+                    "entry_price": 810,
+                    "current_price": 810,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
+                    "is_fca": False
+                },
+                {
+                    "ticker": "BEEF",
                     "is_syariah": False,
-                    "entry_date": "2026-04-12",
-                    "entry_price": 50,
-                    "current_price": 50,
-                    "sl": 48,
-                    "tp1": 60,
-                    "tp2": 75,
-                    "tp3": 90,
-                    "is_fca": True
+                    "entry_date": "2026-09-10",
+                    "entry_price": 438,
+                    "current_price": 438,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
+                    "is_fca": False
+                },
+                {
+                    "ticker": "GWSA",
+                    "is_syariah": True,
+                    "entry_date": "2026-09-09",
+                    "entry_price": 173,
+                    "current_price": 172,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
+                    "is_fca": False
+                },
+                {
+                    "ticker": "MSKY",
+                    "is_syariah": True,
+                    "entry_date": "2026-09-09",
+                    "entry_price": 66,
+                    "current_price": 82,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
+                    "is_fca": False
+                },
+                {
+                    "ticker": "ATAP",
+                    "is_syariah": True,
+                    "entry_date": "2026-09-09",
+                    "entry_price": 560,
+                    "current_price": 565,
+                    "sl": 0,
+                    "tp1": 0,
+                    "tp2": 0,
+                    "tp3": 0,
+                    "is_fca": False
                 }
             ],
             "awakened_history": [
@@ -307,6 +343,37 @@ with st.sidebar:
             st.session_state["is_editor"] = False
             st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
             st.rerun()
+
+        # BACKUP & RESTORE DATABASE JSON
+        st.markdown("---")
+        st.markdown("##### 💾 Backup Database")
+        st.caption("Unduh salinan data untuk disimpan di laptop Anda:")
+        json_backup_str = json.dumps(data, indent=2)
+        st.download_button(
+            label="📥 Download stocks_data.json",
+            data=json_backup_str,
+            file_name=f"stocks_data_backup_{datetime.date.today().strftime('%Y%m%d')}.json",
+            mime="application/json",
+            use_container_width=True,
+            help="Download seluruh isi database saham aktif, riwayat cuan, dan cut loss dalam format JSON."
+        )
+
+        with st.expander("📤 Pulihkan / Restore Data JSON"):
+            st.caption("Upload file backup JSON jika ingin mengembalikan data:")
+            uploaded_json = st.file_uploader("Upload JSON Backup:", type=["json"], key="uploader_restore_json")
+            if uploaded_json is not None:
+                if st.button("♻️ Pulihkan Data Sekarang", type="primary", use_container_width=True, key="btn_apply_restore"):
+                    try:
+                        restored = json.load(uploaded_json)
+                        if "active_stocks" in restored:
+                            save_data(restored)
+                            st.session_state["data"] = restored
+                            st.success("Data berhasil dipulihkan dari backup JSON!")
+                            st.rerun()
+                        else:
+                            st.error("Format JSON tidak valid!")
+                    except Exception as e:
+                        st.error(f"Gagal memulihkan: {e}")
     else:
         st.info("👁️ **Mode: Viewer (Hanya Lihat)**")
         st.caption("Pengunjung publik hanya dapat melihat data, memfilter syariah & tanggal, mengurutkan tabel, dan mengunduh CSV.")
@@ -600,18 +667,17 @@ for s in filtered_active:
     tp2_val = s.get("tp2") or 0
     tp3_val = s.get("tp3") or 0
 
-    sl_str = f"Rp {sl_val} ({((sl_val - entry) / entry * 100):.1f}%)" if sl_val > 0 else "-"
-    tp1_str = f"Rp {tp1_val} (+{((tp1_val - entry) / entry * 100):.1f}%)" if tp1_val > 0 else "-"
-    tp2_str = f"Rp {tp2_val} (+{((tp2_val - entry) / entry * 100):.1f}%)" if tp2_val > 0 else "-"
-    tp3_str = f"Rp {tp3_val} (+{((tp3_val - entry) / entry * 100):.1f}%)" if tp3_val > 0 else "-"
+    sl_str = f"Rp {sl_val} ({((sl_val - entry) / entry * 100):.0f}%)" if sl_val > 0 else "-"
+    tp1_str = f"Rp {tp1_val} (+{((tp1_val - entry) / entry * 100):.0f}%)" if tp1_val > 0 else "-"
+    tp2_str = f"Rp {tp2_val} (+{((tp2_val - entry) / entry * 100):.0f}%)" if tp2_val > 0 else "-"
+    tp3_str = f"Rp {tp3_val} (+{((tp3_val - entry) / entry * 100):.0f}%)" if tp3_val > 0 else "-"
     hold_work_days = calculate_working_days(s["entry_date"])
 
-    # Status Dinamis (Prioritas: Kena SL > Dekat SL > TP > Floating Profit/Loss > Masih Tidur)
+    # Status Dinamis (Ringkas & pas dalam 1 layar tanpa terpotong)
     if sl_val > 0 and curr <= sl_val:
-        status = f"KENA SL (Rp {sl_val}) 🛑"
+        status = "KENA SL 🛑"
     elif sl_val > 0 and curr <= (sl_val * 1.03):
-        diff_sl = curr - sl_val
-        status = f"DEKAT SL (Sisa {diff_sl} pt) 🚨"
+        status = "DEKAT SL 🚨"
     elif tp3_val > 0 and curr >= tp3_val:
         status = "TP 3 TERCAPAI 🏆"
     elif tp2_val > 0 and curr >= tp2_val:
@@ -620,17 +686,17 @@ for s in filtered_active:
         status = "TP 1 TERCAPAI 🎯"
     elif tp1_val > 0 and curr > entry:
         diff_tp1 = tp1_val - curr
-        status = f"DEKAT TP 1 (Sisa {diff_tp1} pt) ⚡"
+        status = f"DEKAT TP 1 (-{diff_tp1}) ⚡"
     elif curr > entry:
-        status = f"FLOATING PROFIT 📈 (+{gain_pct:.1f}%)"
+        status = "PROFIT 📈"
     elif curr < entry:
-        status = f"FLOATING LOSS 🔻 ({gain_pct:.1f}%)"
+        status = "LOSS 🔻"
     else:
         status = "MASIH TIDUR 💤"
 
     display_active.append({
         "Kode": s["ticker"],
-        "Syariah": "🕌 Syariah" if s["is_syariah"] else "Non-Syariah",
+        "Syariah": "✅" if s["is_syariah"] else "-",
         "Tgl Masuk": s["entry_date"],
         "Lama Hold": hold_work_days,
         "Harga Masuk": entry,
@@ -640,7 +706,6 @@ for s in filtered_active:
         "TP 1": tp1_str,
         "TP 2": tp2_str,
         "TP 3": tp3_str,
-        "Papan": "FCA" if s.get("is_fca") else "Reguler",
         "Status": status
     })
 
@@ -651,19 +716,18 @@ if not df_active.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Kode": st.column_config.TextColumn("Kode"),
-            "Syariah": st.column_config.TextColumn("Syariah"),
-            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
-            "Lama Hold": st.column_config.NumberColumn("Lama Hold", format="%d Hari Kerja"),
-            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
-            "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang", format="Rp %d"),
-            "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%.2f%%"),
-            "SL": st.column_config.TextColumn("Stop Loss (SL)"),
-            "TP 1": st.column_config.TextColumn("Target TP 1"),
-            "TP 2": st.column_config.TextColumn("Target TP 2"),
-            "TP 3": st.column_config.TextColumn("Target TP 3"),
-            "Papan": st.column_config.TextColumn("Papan"),
-            "Status": st.column_config.TextColumn("Status"),
+            "Kode": st.column_config.TextColumn("Kode", width="small"),
+            "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+            "Lama Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small", help="Lama simpan hari kerja bursa (Senin-Jumat)"),
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d", width="small"),
+            "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang", format="Rp %d", width="small"),
+            "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%+.2f%%", width="small"),
+            "SL": st.column_config.TextColumn("SL", width="small", help="Level Stop Loss (Batas Risiko)"),
+            "TP 1": st.column_config.TextColumn("TP 1", width="small", help="Target Take Profit 1"),
+            "TP 2": st.column_config.TextColumn("TP 2", width="small", help="Target Take Profit 2"),
+            "TP 3": st.column_config.TextColumn("TP 3", width="small", help="Target Take Profit 3"),
+            "Status": st.column_config.TextColumn("Status", width="medium"),
         }
     )
 else:
@@ -1321,7 +1385,7 @@ display_hist = []
 for h in filtered_hist:
     display_hist.append({
         "Kode": h["ticker"],
-        "Syariah": "🕌 Syariah" if h["is_syariah"] else "Non-Syariah",
+        "Syariah": "✅" if h["is_syariah"] else "-",
         "Tgl Masuk": h["entry_date"],
         "Tgl Bangun": h["awakened_date"],
         "Lama Hold": int(h.get("hold_days", 0)),
@@ -1339,16 +1403,16 @@ if not df_hist.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Kode": st.column_config.TextColumn("Kode"),
-            "Syariah": st.column_config.TextColumn("Syariah"),
-            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
-            "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun"),
-            "Lama Hold": st.column_config.NumberColumn("Lama Hold", format="%d Hari Kerja"),
-            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
-            "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d"),
-            "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%"),
-            "Status Exit": st.column_config.TextColumn("Status Exit"),
-            "Catatan": st.column_config.TextColumn("Catatan"),
+            "Kode": st.column_config.TextColumn("Kode", width="small"),
+            "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+            "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun", width="small"),
+            "Lama Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d", width="small"),
+            "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d", width="small"),
+            "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%", width="small"),
+            "Status Exit": st.column_config.TextColumn("Status Exit", width="medium"),
+            "Catatan": st.column_config.TextColumn("Catatan", width="large"),
         }
     )
     df_hist_export = df_hist.copy()
@@ -1421,7 +1485,7 @@ for g in filtered_gagal:
 
     display_gagal.append({
         "Kode": g["ticker"],
-        "Syariah": "🕌 Syariah" if g.get("is_syariah", True) else "Non-Syariah",
+        "Syariah": "✅" if g.get("is_syariah", True) else "-",
         "Tgl Masuk": g.get("entry_date", "-"),
         "Tgl Cut Loss": g.get("exit_date", "-"),
         "Lama Hold": hold_days,
@@ -1440,17 +1504,17 @@ if not df_gagal.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Kode": st.column_config.TextColumn("Kode"),
-            "Syariah": st.column_config.TextColumn("Syariah"),
-            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk"),
-            "Tgl Cut Loss": st.column_config.TextColumn("Tgl Cut Loss"),
-            "Lama Hold": st.column_config.NumberColumn("Lama Hold", format="%d Hari Kerja"),
-            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d"),
-            "Harga Cut Loss": st.column_config.NumberColumn("Harga Cut Loss", format="Rp %d"),
-            "Realisasi Rugi (%)": st.column_config.NumberColumn("Realisasi Rugi", format="%.2f%%"),
-            "Target SL Terpasang": st.column_config.TextColumn("Level SL"),
-            "Status Exit": st.column_config.TextColumn("Status Exit"),
-            "Catatan": st.column_config.TextColumn("Catatan / Alasan"),
+            "Kode": st.column_config.TextColumn("Kode", width="small"),
+            "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
+            "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+            "Tgl Cut Loss": st.column_config.TextColumn("Tgl Cut Loss", width="small"),
+            "Lama Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
+            "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d", width="small"),
+            "Harga Cut Loss": st.column_config.NumberColumn("Harga Cut Loss", format="Rp %d", width="small"),
+            "Realisasi Rugi (%)": st.column_config.NumberColumn("Realisasi Rugi", format="%.2f%%", width="small"),
+            "Target SL Terpasang": st.column_config.TextColumn("Level SL", width="small"),
+            "Status Exit": st.column_config.TextColumn("Status Exit", width="medium"),
+            "Catatan": st.column_config.TextColumn("Catatan / Alasan", width="large"),
         }
     )
     df_gagal_export = df_gagal.copy()

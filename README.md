@@ -39,9 +39,9 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
 * **Winrate Bulanan Dinamis**: Menampilkan performa khusus bulan terbaru secara default, serta dilengkapi dropdown untuk memilih dan mengevaluasi bulan-bulan sebelumnya.
 * **Komparasi Mendalam**: Panel rincian komparasi performa All-Time vs Bulan Terpilih, termasuk status floating profit saham aktif dan siaga emiten yang terkena SL.
 
-### 5. 🕌 Filter Saham Syariah (ISSI) & Papan FCA
-* Indikator jelas untuk saham Syariah (ISSI) dan saham Non-Syariah.
-* Penanda saham yang masuk **Papan Pemantauan Khusus / Full Call Auction (FCA)**.
+### 5. 🕌 Filter & Tampilan Single-View Saham Syariah (ISSI)
+* **Penanda Ringkas**: Ikon centang (**✅**) untuk saham Syariah (ISSI) dan tanda hubung (**-**) untuk Non-Syariah.
+* **Layout Satu Layar (Single-View)**: Kolom papan telah diringkas/dihapus dan lebar kolom dioptimalkan agar seluruh data dari Kode, Modal, Target TP/SL, hingga Status langsung terbaca rapi dalam satu tampilan layar tanpa perlu scroll horizontal.
 
 ### 6. 📥 Export ke File CSV
 * Tombol export instan untuk **Watchlist Aktif**, **Histori Saham Bangun**, maupun **Histori Saham Gagal Bangun (SL)**.
@@ -66,6 +66,11 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
 * Dilengkapi filter Syariah, pencarian kode saham, filter tanggal cut loss, dan tombol unduh CSV.
 * Terintegrasi langsung ke perhitungan statistik Win Rate trading agar hasil evaluasi performa trading selalu objektif dan realistis.
 
+### 9. 💾 Backup & Restore Database JSON (Perlindungan Data Anti-Hilang)
+* **1-Click Backup**: Di sidebar saat login Editor, tersedia tombol **📥 Download stocks_data.json** untuk mengunduh seluruh database (watchlist aktif, riwayat cuan, dan cut loss) ke laptop Anda kapan saja.
+* **Restore Fleksibel**: Dilengkapi fitur upload JSON cadangan untuk memulihkan seluruh data secara instan jika sewaktu-waktu dibutuhkan.
+* **Keamanan Permanen**: File `stocks_data.json` hasil unduhan dapat diunggah langsung ke repositori GitHub agar data tersimpan permanen dan kebal dari reboot server cloud.
+
 ---
 
 ## 🛠️ Struktur Proyek
@@ -73,8 +78,9 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
 ```text
 saham-tidur-dashboard/
 ├── app.py              # File utama aplikasi Streamlit
+├── stocks_data.json    # Database saham aktif & histori (bisa di-commit ke GitHub)
 ├── requirements.txt    # Daftar pustaka Python (Streamlit, Pandas, yfinance, requests)
-├── README.md           # Dokumentasi proyek
+├── README.md           # Dokumentasi lengkap proyek
 └── LICENSE             # Lisensi MIT (Open Public)
 ```
 
@@ -106,7 +112,7 @@ Jika Anda ingin menjalankan aplikasi ini di laptop Anda:
 ## ☁️ Cara Deploy ke Streamlit Community Cloud (Gratis)
 
 1. Buat repository baru di [GitHub](https://github.com/) (contoh: `saham-tidur-radar`).
-2. Upload file `app.py`, `requirements.txt`, `README.md`, dan `LICENSE` ke repository tersebut.
+2. Upload file `app.py`, `stocks_data.json` (database awal agar permanen), `requirements.txt`, `README.md`, dan `LICENSE` ke repository tersebut.
 3. Buka [share.streamlit.io](https://share.streamlit.io) dan login dengan akun GitHub Anda.
 4. Klik **New app**, pilih repository Anda, set branch `main`, dan main file path `app.py`.
 5. Klik **Deploy!** 🎈.

@@ -1,0 +1,129 @@
+﻿{
+  "active_stocks": [
+    {
+      "ticker": "DIST",
+      "is_syariah": true,
+      "entry_date": "2026-09-10",
+      "entry_price": 50,
+      "current_price": 50,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": true
+    },
+    {
+      "ticker": "ROTI",
+      "is_syariah": true,
+      "entry_date": "2026-09-10",
+      "entry_price": 585,
+      "current_price": 585,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    },
+    {
+      "ticker": "GULA",
+      "is_syariah": true,
+      "entry_date": "2026-09-10",
+      "entry_price": 810,
+      "current_price": 810,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    },
+    {
+      "ticker": "BEEF",
+      "is_syariah": false,
+      "entry_date": "2026-09-10",
+      "entry_price": 438,
+      "current_price": 438,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    },
+    {
+      "ticker": "GWSA",
+      "is_syariah": true,
+      "entry_date": "2026-09-09",
+      "entry_price": 173,
+      "current_price": 172,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    },
+    {
+      "ticker": "MSKY",
+      "is_syariah": true,
+      "entry_date": "2026-09-09",
+      "entry_price": 66,
+      "current_price": 82,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    },
+    {
+      "ticker": "ATAP",
+      "is_syariah": true,
+      "entry_date": "2026-09-09",
+      "entry_price": 560,
+      "current_price": 565,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false
+    }
+  ],
+  "awakened_history": [
+    {
+      "ticker": "BUMI",
+      "is_syariah": true,
+      "entry_date": "2026-06-02",
+      "awakened_date": "2026-07-24",
+      "hold_days": 38,
+      "entry_price": 80,
+      "exit_price": 88,
+      "gain_pct": 10.0,
+      "status_exit": "BUNGKUS MANUAL 💰",
+      "note": "Dekat TP 1 di 90, amankan cuan +10%"
+    },
+    {
+      "ticker": "KPIG",
+      "is_syariah": true,
+      "entry_date": "2026-07-10",
+      "awakened_date": "2026-09-09",
+      "hold_days": 43,
+      "entry_price": 55,
+      "exit_price": 74,
+      "gain_pct": 34.55,
+      "status_exit": "TP 2 TEMBUS 🎯",
+      "note": "Target TP 2 Rp 72 berhasil dilewati"
+    }
+  ],
+  "failed_history": [
+    {
+      "ticker": "ZINC",
+      "is_syariah": true,
+      "entry_date": "2026-07-05",
+      "exit_date": "2026-07-18",
+      "hold_days": 10,
+      "entry_price": 50,
+      "exit_price": 47,
+      "loss_pct": -6.0,
+      "sl": 48,
+      "status_exit": "KENA SL 🛑",
+      "note": "Turun menembus level SL 48, cut loss disiplin"
+    }
+  ]
+}

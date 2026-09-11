@@ -20,10 +20,12 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
   * Mengunduh data tabel ke format `.CSV` (otomatis mengikuti filter yang aktif).
 * **Mode Editor**:
   * Diproteksi password rahasia (`akubahagiasehatkayaraya` atau via Streamlit Secrets).
-  * Menambah saham tidur baru ke watchlist.
+  * Menambah saham tidur baru ke watchlist (satuan maupun Quick Import massal).
   * Mengupdate harga live secara manual via Yahoo Finance (`.JK`).
-  * Membungkus cuan (*early exit* / target TP) dan memindahkannya ke tabel histori.
-  * Mengedit angka TP/harga dan menghapus baris data dengan sistem **centang tabel (*checkbox*)**.
+  * Membungkus cuan (*early exit* / target TP) dengan **input catatan manual bebas (ketik sendiri)** dan memindahkannya ke tabel histori.
+  * Realisasi Cut Loss / Stop Loss dengan **input catatan manual bebas**.
+  * Mengedit angka TP/SL/harga/catatan dan menghapus baris data dengan sistem **centang tabel (*checkbox*)**.
+  * Tombol **Backup & Restore Database JSON** di sidebar untuk menjamin data aman 100%.
   * Dilengkapi tombol **Exit / Keluar Mode Editor** untuk kembali ke mode publik dengan aman.
 
 ### 2. 🎯 Multi-Target Take Profit (TP) & Stop Loss (SL) Manual

@@ -938,20 +938,38 @@ if is_editor:
         st.markdown("**Amankan profit saham tidur (meski belum sentuh TP 1 resmi):**")
         tickers_active = [s["ticker"] for s in active_list]
         if tickers_active:
-            b_col1, b_col2, b_col3 = st.columns(3)
+            b_col1, b_col2 = st.columns([1.5, 1.5])
             with b_col1:
                 sel_ticker = st.selectbox("Pilih Saham yang Mau Dibungkus:", tickers_active)
                 selected_stock = next(s for s in active_list if s["ticker"] == sel_ticker)
             with b_col2:
                 exit_price = st.number_input("Harga Jual / Realisasi (Rp):", min_value=1, value=int(selected_stock["current_price"]))
+
+            b_col3, b_col4 = st.columns([1.5, 2])
             with b_col3:
-                exit_reason = st.selectbox("Alasan Exit:", [
+                exit_reason_preset = st.selectbox("Pilihan Alasan Cepat:", [
+                    "Ketik Manual Sendiri ✍️",
+                    "Target TP resmi tercapai",
                     "Dekat TP 1 tapi antrean berat, amankan cuan",
                     "Amankan modal (Bungkus dulu)",
                     "Volume mulai sepi kembali",
-                    "Pindah ke emiten lain",
-                    "Target TP resmi tercapai"
-                ])
+                    "Pindah ke emiten lain"
+                ], key="sel_exit_reason_preset")
+            with b_col4:
+                custom_exit_note = st.text_input(
+                    "Catatan Manual (Ketik Sendiri):",
+                    placeholder="Contoh: ARA hari kedua, amankan cuan dulu",
+                    key="input_custom_exit_note",
+                    help="Ketik catatan sendiri di sini. Jika dikosongkan, akan menggunakan alasan pilihan di sebelah kiri."
+                )
+
+            # Tentukan catatan akhir
+            if custom_exit_note.strip():
+                final_exit_note = custom_exit_note.strip()
+            elif exit_reason_preset != "Ketik Manual Sendiri ✍️":
+                final_exit_note = exit_reason_preset
+            else:
+                final_exit_note = "Bungkus cuan manual"
 
             entry_p = selected_stock["entry_price"]
             realized_gain = ((exit_price - entry_p) / entry_p * 100) if entry_p > 0 else 0.0
@@ -970,7 +988,7 @@ if is_editor:
                     "exit_price": exit_price,
                     "gain_pct": round(realized_gain, 2),
                     "status_exit": "TARGET TP TERCAPAI 🎯" if (tp1_target > 0 and exit_price >= tp1_target) else "BUNGKUS MANUAL 💰",
-                    "note": exit_reason
+                    "note": final_exit_note
                 }
                 data["awakened_history"].insert(0, new_hist)
                 data["active_stocks"] = [s for s in data["active_stocks"] if s["ticker"] != sel_ticker]
@@ -993,7 +1011,7 @@ if is_editor:
             if sl_breached:
                 st.warning(f"🚨 **Peringatan Siaga**: Saham **{', '.join(sl_breached)}** saat ini telah menyentuh atau berada di bawah level Stop Loss!")
 
-            sl_col1, sl_col2, sl_col3 = st.columns(3)
+            sl_col1, sl_col2 = st.columns([1.5, 1.5])
             with sl_col1:
                 default_idx = tickers_active.index(sl_breached[0]) if sl_breached else 0
                 sel_sl_ticker = st.selectbox("Pilih Saham yang Mau Di-Cut Loss:", tickers_active, index=default_idx, key="sel_sl_ticker")
@@ -1001,14 +1019,32 @@ if is_editor:
             with sl_col2:
                 default_cut_price = int(sel_sl_stock["current_price"])
                 exit_sl_price = st.number_input("Harga Jual / Realisasi Cut Loss (Rp):", min_value=1, value=default_cut_price, key="input_exit_sl_price")
+
+            sl_col3, sl_col4 = st.columns([1.5, 2])
             with sl_col3:
-                exit_sl_reason = st.selectbox("Alasan Cut Loss / Gagal Bangun:", [
+                exit_sl_preset = st.selectbox("Pilihan Alasan Cepat:", [
+                    "Ketik Manual Sendiri ✍️",
                     "Terkena Level Stop Loss (Disiplin SL)",
                     "Menembus Support Kunci (Breakdown)",
                     "Volume Pembalikan Negatif",
                     "Sentimen Pasar / Fundamental Memburuk",
                     "Cut Loss Manual (Pindah Modal ke Emiten Lain)"
-                ], key="sel_exit_sl_reason")
+                ], key="sel_exit_sl_preset")
+            with sl_col4:
+                custom_sl_note = st.text_input(
+                    "Catatan Manual Cut Loss (Ketik Sendiri):",
+                    placeholder="Contoh: Breakdown support MA20 dengan volume besar",
+                    key="input_custom_sl_note",
+                    help="Ketik catatan sendiri di sini. Jika dikosongkan, akan menggunakan alasan pilihan di sebelah kiri."
+                )
+
+            # Tentukan catatan akhir cut loss
+            if custom_sl_note.strip():
+                final_sl_note = custom_sl_note.strip()
+            elif exit_sl_preset != "Ketik Manual Sendiri ✍️":
+                final_sl_note = exit_sl_preset
+            else:
+                final_sl_note = "Kena SL / Cut Loss manual"
 
             entry_p = sel_sl_stock["entry_price"]
             realized_loss = ((exit_sl_price - entry_p) / entry_p * 100) if entry_p > 0 else 0.0
@@ -1029,7 +1065,7 @@ if is_editor:
                     "loss_pct": round(realized_loss, 2),
                     "sl": sl_preset,
                     "status_exit": "KENA SL 🛑" if (sl_preset > 0 and exit_sl_price <= sl_preset) else "CUT LOSS MANUAL ✂️",
-                    "note": exit_sl_reason
+                    "note": final_sl_note
                 }
                 if "failed_history" not in data:
                     data["failed_history"] = []
@@ -1167,7 +1203,7 @@ if is_editor:
     # ----------------------------------------------------
     with tab_manage_cuan:
         st.markdown("##### 🏆 Kelola Histori Saham Bangun (Cuan)")
-        st.caption("Edit data (Harga Jual, Tanggal, Status Exit, Catatan) atau centang baris untuk menghapus histori.")
+        st.caption("Edit data (Harga Jual, Tanggal, Catatan) atau centang baris untuk menghapus histori.")
         if history_list:
             hist_rows = []
             for idx, h in enumerate(history_list):
@@ -1179,7 +1215,6 @@ if is_editor:
                     "Tgl Bangun": h["awakened_date"],
                     "Harga Masuk": int(h["entry_price"]),
                     "Harga Jual": int(h["exit_price"]),
-                    "Status Exit": h.get("status_exit", "BUNGKUS MANUAL 💰"),
                     "Catatan": h.get("note", "")
                 })
             df_manage_hist = pd.DataFrame(hist_rows)
@@ -1194,8 +1229,7 @@ if is_editor:
                     "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun (YYYY-MM-DD)"),
                     "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
                     "Harga Jual": st.column_config.NumberColumn("Harga Jual (Rp)", min_value=1, step=1, format="%d"),
-                    "Status Exit": st.column_config.TextColumn("Status Exit"),
-                    "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit"),
+                    "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit (Ketik Manual)", help="Klik langsung di kolom ini untuk mengetik/mengubah catatan manual"),
                 },
                 hide_index=True,
                 use_container_width=True,
@@ -1227,6 +1261,7 @@ if is_editor:
                         
                         orig_idx = int(r["_id"])
                         orig_syariah = data["awakened_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["awakened_history"]) else True
+                        orig_status = data["awakened_history"][orig_idx].get("status_exit", "BUNGKUS MANUAL 💰") if orig_idx < len(data["awakened_history"]) else "BUNGKUS MANUAL 💰"
                         
                         new_hist_list.append({
                             "ticker": str(r["Kode"]),
@@ -1237,7 +1272,7 @@ if is_editor:
                             "entry_price": entry_p,
                             "exit_price": exit_p,
                             "gain_pct": recalculated_gain,
-                            "status_exit": str(r["Status Exit"]),
+                            "status_exit": orig_status,
                             "note": str(r["Catatan"])
                         })
                     data["awakened_history"] = new_hist_list
@@ -1392,7 +1427,6 @@ for h in filtered_hist:
         "Harga Masuk": int(h["entry_price"]),
         "Harga Jual": int(h["exit_price"]),
         "Realisasi Cuan (%)": round(float(h["gain_pct"]), 2),
-        "Status Exit": h["status_exit"],
         "Catatan": h.get("note", "-")
     })
 
@@ -1411,8 +1445,7 @@ if not df_hist.empty:
             "Harga Masuk": st.column_config.NumberColumn("Harga Masuk", format="Rp %d", width="small"),
             "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d", width="small"),
             "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%", width="small"),
-            "Status Exit": st.column_config.TextColumn("Status Exit", width="medium"),
-            "Catatan": st.column_config.TextColumn("Catatan", width="large"),
+            "Catatan": st.column_config.TextColumn("Catatan / Alasan Exit", width="large"),
         }
     )
     df_hist_export = df_hist.copy()

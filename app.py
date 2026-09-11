@@ -288,7 +288,7 @@ def load_data():
             json.dump(initial_data, f, indent=2)
         return initial_data
 
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
+    with open(DATA_FILE, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
         if "failed_history" not in data:
             data["failed_history"] = []
@@ -299,7 +299,7 @@ def load_data():
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 # ==========================================
 # FETCH HARGA TERAKHIR DARI YAHOO FINANCE
@@ -348,7 +348,7 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("##### 💾 Backup Database")
         st.caption("Unduh salinan data untuk disimpan di laptop Anda:")
-        json_backup_str = json.dumps(data, indent=2)
+        json_backup_str = json.dumps(data, indent=2, ensure_ascii=False)
         st.download_button(
             label="📥 Download stocks_data.json",
             data=json_backup_str,
@@ -364,7 +364,8 @@ with st.sidebar:
             if uploaded_json is not None:
                 if st.button("♻️ Pulihkan Data Sekarang", type="primary", use_container_width=True, key="btn_apply_restore"):
                     try:
-                        restored = json.load(uploaded_json)
+                        raw_bytes = uploaded_json.getvalue()
+                        restored = json.loads(raw_bytes.decode("utf-8-sig"))
                         if "active_stocks" in restored:
                             save_data(restored)
                             st.session_state["data"] = restored

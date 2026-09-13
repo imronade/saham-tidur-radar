@@ -1475,7 +1475,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     with hf_col1:
         filter_closed_status = st.selectbox(
             "📊 Status Hasil:",
-            ["Semua (Profit & Loss)", "🟢 Hanya Profit", "🔴 Hanya Loss"],
+            ["Semua (Profit / Loss / BEP)", "🟢 Hanya Profit", "🔴 Hanya Loss", "⚪ Hanya BEP"],
             key="filter_closed_status"
         )
     with hf_col2:
@@ -1506,8 +1506,18 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     combined_closed = []
     for h in history_list:
         gain_val = float(h.get("gain_pct", 0.0))
+        if gain_val > 0:
+            status_text = "Profit"
+            trade_type = "PROFIT"
+        elif gain_val < 0:
+            status_text = "Loss"
+            trade_type = "LOSS"
+        else:
+            status_text = "BEP"
+            trade_type = "BEP"
+
         combined_closed.append({
-            "type": "PROFIT",
+            "type": trade_type,
             "ticker": h["ticker"],
             "category": h.get("category", "Saham Tidur"),
             "is_syariah": h.get("is_syariah", True),
@@ -1517,7 +1527,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "entry_price": int(h.get("entry_price", 0)),
             "exit_price": int(h.get("exit_price", 0)),
             "return_pct": gain_val,
-            "status_pl": f"🟢 Profit (+{gain_val:.2f}%)",
+            "status_pl": status_text,
             "level_sl": "-",
             "note": h.get("note", "-")
         })
@@ -1525,8 +1535,18 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     for f in failed_list:
         loss_val = float(f.get("loss_pct", 0.0))
         sl_val = int(f.get("sl", 0))
+        if loss_val > 0:
+            status_text = "Profit"
+            trade_type = "PROFIT"
+        elif loss_val < 0:
+            status_text = "Loss"
+            trade_type = "LOSS"
+        else:
+            status_text = "BEP"
+            trade_type = "BEP"
+
         combined_closed.append({
-            "type": "LOSS",
+            "type": trade_type,
             "ticker": f["ticker"],
             "category": f.get("category", "Saham Tidur"),
             "is_syariah": f.get("is_syariah", True),
@@ -1536,7 +1556,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "entry_price": int(f.get("entry_price", 0)),
             "exit_price": int(f.get("exit_price", 0)),
             "return_pct": loss_val,
-            "status_pl": f"🔴 Loss ({loss_val:.2f}%)",
+            "status_pl": status_text,
             "level_sl": f"Rp {sl_val}" if sl_val > 0 else "-",
             "note": f.get("note", "-")
         })
@@ -1544,10 +1564,12 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     # Filter logic
     filtered_closed = []
     for c in combined_closed:
-        # Filter Profit / Loss
+        # Filter Profit / Loss / BEP
         if filter_closed_status == "🟢 Hanya Profit" and c["type"] != "PROFIT":
             continue
         if filter_closed_status == "🔴 Hanya Loss" and c["type"] != "LOSS":
+            continue
+        if filter_closed_status == "⚪ Hanya BEP" and c["type"] != "BEP":
             continue
 
         # Filter Kategori
@@ -1579,7 +1601,6 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "Kode": c["ticker"],
             "Kategori": c["category"],
             "Syariah": "✅" if c["is_syariah"] else "-",
-            "Status": c["status_pl"],
             "Tgl Masuk": c["entry_date"],
             "Tgl Selesai": c["exit_date"],
             "Hold": c["hold_days"],
@@ -1587,6 +1608,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "Harga Selesai": c["exit_price"],
             "Realisasi (%)": round(c["return_pct"], 2),
             "Level SL": c["level_sl"],
+            "Status": c["status_pl"],
             "Catatan / Alasan Exit": c["note"]
         })
 
@@ -1600,7 +1622,6 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
                 "Kode": st.column_config.TextColumn("Kode", width="small"),
                 "Kategori": st.column_config.TextColumn("Kategori Screener", width="medium"),
                 "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
-                "Status": st.column_config.TextColumn("Status", width="medium", help="Keterangan Profit / Loss"),
                 "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
                 "Tgl Selesai": st.column_config.TextColumn("Tgl Selesai", width="small"),
                 "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
@@ -1608,6 +1629,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
                 "Harga Selesai": st.column_config.NumberColumn("Harga Selesai", format="Rp %d", width="small"),
                 "Realisasi (%)": st.column_config.NumberColumn("Realisasi P/L", format="%+.2f%%", width="small"),
                 "Level SL": st.column_config.TextColumn("Level SL", width="small"),
+                "Status": st.column_config.TextColumn("Status", width="small", help="Profit / Loss / BEP"),
                 "Catatan / Alasan Exit": st.column_config.TextColumn("Catatan / Alasan Exit", width="large"),
             }
         )

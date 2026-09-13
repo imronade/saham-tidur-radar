@@ -556,9 +556,9 @@ with st.expander("📊 Statistik & Evaluasi Win Rate (Klik untuk Buka / Tutup)",
         f"Total: {total_gain_cat:+.1f}%"
     )
     m_all4.metric(
-        "Posisi Aktif Berjalan 💤",
+        "Posisi Aktif Berjalan ⏳",
         f"{act_total_cat} Emiten",
-        f"🟢 {act_profit_cat} Profit | 🔴 {act_loss_cat} Loss"
+        f"📈 {act_profit_cat} Profit | 🔻 {act_loss_cat} Loss"
     )
 
     st.markdown("---")
@@ -616,8 +616,8 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
     f_pl, f_sya, f_date, f_search = st.columns([1.8, 1.5, 1.8, 1.5])
     with f_pl:
         filter_pl = st.selectbox(
-            "📊 Filter Status P/L:",
-            ["Semua Status P/L", "🟢 Hanya Profit", "🔴 Hanya Loss"],
+            "📊 Filter Status:",
+            ["Semua Status", "📈 Hanya Profit", "🔻 Hanya Loss", "⚖️ Hanya BEP"],
             key=f"filter_pl_{tab_key}"
         )
     with f_sya:
@@ -646,10 +646,12 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         entry = s.get("entry_price", 0)
         curr = s.get("current_price", 0)
 
-        # Filter P/L
-        if filter_pl == "🟢 Hanya Profit" and curr <= entry:
+        # Filter Status
+        if filter_pl == "📈 Hanya Profit" and curr <= entry:
             continue
-        if filter_pl == "🔴 Hanya Loss" and curr >= entry:
+        if filter_pl == "🔻 Hanya Loss" and curr >= entry:
+            continue
+        if filter_pl == "⚖️ Hanya BEP" and curr != entry:
             continue
 
         # Filter Syariah
@@ -691,34 +693,13 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         tp3_str = f"Rp {tp3_val} (+{((tp3_val - entry) / entry * 100):.0f}%)" if tp3_val > 0 else "-"
         hold_work_days = calculate_working_days(s.get("entry_date"))
 
-        # Status P/L
+        # Status
         if gain_pct > 0:
-            status_pl = f"🟢 Profit (+{gain_pct:.1f}%)"
+            status_pl = f"📈 Profit (+{gain_pct:.1f}%)"
         elif gain_pct < 0:
-            status_pl = f"🔴 Loss ({gain_pct:.1f}%)"
+            status_pl = f"🔻 Loss ({gain_pct:.1f}%)"
         else:
-            status_pl = "⚪ BEP (0.0%)"
-
-        # Status Alert
-        if sl_val > 0 and curr <= sl_val:
-            status_alert = "KENA SL 🛑"
-        elif sl_val > 0 and curr <= (sl_val * 1.03):
-            status_alert = "DEKAT SL 🚨"
-        elif tp3_val > 0 and curr >= tp3_val:
-            status_alert = "TP 3 TERCAPAI 🏆"
-        elif tp2_val > 0 and curr >= tp2_val:
-            status_alert = "TP 2 TEMBUS 🎯"
-        elif tp1_val > 0 and curr >= tp1_val:
-            status_alert = "TP 1 TERCAPAI 🎯"
-        elif tp1_val > 0 and curr > entry:
-            diff_tp1 = tp1_val - curr
-            status_alert = f"DEKAT TP 1 (-{diff_tp1}) ⚡"
-        elif curr > entry:
-            status_alert = "PROFIT 📈"
-        elif curr < entry:
-            status_alert = "LOSS 🔻"
-        else:
-            status_alert = "MASIH TIDUR 💤"
+            status_pl = "⚖️ BEP (0.0%)"
 
         display_rows.append({
             "Kode": s["ticker"],
@@ -728,12 +709,11 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
             "Harga Masuk": entry,
             "Harga Sekarang": curr,
             "Floating Gain (%)": round(gain_pct, 2),
-            "Status P/L": status_pl,
             "SL": sl_str,
             "TP 1": tp1_str,
             "TP 2": tp2_str,
             "TP 3": tp3_str,
-            "Kondisi": status_alert
+            "Status": status_pl
         })
 
     df_tab = pd.DataFrame(display_rows)
@@ -750,12 +730,11 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
                 "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
                 "Harga Sekarang": st.column_config.NumberColumn("Harga", format="Rp %d", width="small"),
                 "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%+.2f%%", width="small"),
-                "Status P/L": st.column_config.TextColumn("Status P/L", width="medium", help="Status pergerakan harga terhadap modal"),
                 "SL": st.column_config.TextColumn("SL", width="small", help="Level Stop Loss (Batas Risiko)"),
                 "TP 1": st.column_config.TextColumn("TP 1", width="small", help="Target Take Profit 1"),
                 "TP 2": st.column_config.TextColumn("TP 2", width="small", help="Target Take Profit 2"),
                 "TP 3": st.column_config.TextColumn("TP 3", width="small", help="Target Take Profit 3"),
-                "Kondisi": st.column_config.TextColumn("Kondisi", width="medium", help="Status teknikal & level target"),
+                "Status": st.column_config.TextColumn("Status", width="medium", help="Status pergerakan harga terhadap modal (Profit / Loss / BEP)"),
             }
         )
 
@@ -1475,7 +1454,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     with hf_col1:
         filter_closed_status = st.selectbox(
             "📊 Status Hasil:",
-            ["Semua (Profit / Loss / BEP)", "🟢 Hanya Profit", "🔴 Hanya Loss", "⚪ Hanya BEP"],
+            ["Semua (Profit / Loss / BEP)", "📈 Hanya Profit", "🔻 Hanya Loss", "⚖️ Hanya BEP"],
             key="filter_closed_status"
         )
     with hf_col2:
@@ -1565,11 +1544,11 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     filtered_closed = []
     for c in combined_closed:
         # Filter Profit / Loss / BEP
-        if filter_closed_status == "🟢 Hanya Profit" and c["type"] != "PROFIT":
+        if filter_closed_status == "📈 Hanya Profit" and c["type"] != "PROFIT":
             continue
-        if filter_closed_status == "🔴 Hanya Loss" and c["type"] != "LOSS":
+        if filter_closed_status == "🔻 Hanya Loss" and c["type"] != "LOSS":
             continue
-        if filter_closed_status == "⚪ Hanya BEP" and c["type"] != "BEP":
+        if filter_closed_status == "⚖️ Hanya BEP" and c["type"] != "BEP":
             continue
 
         # Filter Kategori

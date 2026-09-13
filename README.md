@@ -33,13 +33,12 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
   * **🌊 Flow Masuk**: Saham-saham yang mulai terdeteksi aliran dana besar (*smart money / broker accumulation / foreign flow*).
   * **💎 Flow Masuk + Fundamental OK**: Saham pilihan terbaik (*Golden Setup*) yang menggabungkan aliran dana aktif dan kondisi perusahaan yang sehat bebas redflag.
   * **💤 Saham Tidur**: Saham fase konsolidasi/sepi murni yang siap dipantau atau dicicil santai.
-* **Kolom Status Profit / Loss (P/L)**: Menampilkan status pergerakan harga saham secara visual:
-  * `🟢 Profit (+X.X%)` jika harga saham sedang mengambang di atas modal.
-  * `🔴 Loss (-X.X%)` jika harga saham berada di bawah modal awal.
-  * `⚪ BEP (0.0%)` jika harga saham sama persis dengan modal awal.
-* **Filter Interaktif Status P/L**: Filter dropdown di atas setiap tabel untuk menyaring: `Semua Status P/L`, `🟢 Hanya Profit`, atau `🔴 Hanya Loss`.
+* **Kolom Status di Ujung Tabel (Setelah TP 3)**: Menampilkan status pergerakan harga saham secara visual:
+  * `📈 Profit (+X.X%)` jika harga saham sedang mengambang di atas modal.
+  * `🔻 Loss (-X.X%)` jika harga saham berada di bawah modal awal.
+  * `⚖️ BEP (0.0%)` jika harga saham sama persis dengan modal awal.
+* **Filter Interaktif Status**: Filter dropdown di atas setiap tabel untuk menyaring: `Semua Status`, `📈 Hanya Profit`, `🔻 Hanya Loss`, atau `⚖️ Hanya BEP`.
 * **Multi-Target Take Profit (TP 1, TP 2, TP 3) & Stop Loss (SL)**: Pengisian level target TP dan batas risiko manual (Rp).
-* **Status Saham Dinamis**: Otomatis mendeteksi `KENA SL 🛑`, `DEKAT SL 🚨`, `MASIH TIDUR 💤`, `PROFIT 📈`, `LOSS 🔻`, `DEKAT TP 1 ⚡`, hingga `TP 1/2/3 TERCAPAI 🎯/🏆`.
 
 ### 3. 📅 Perhitungan Durasi Hold Hari Kerja (Working Days)
 * Menghitung lama hold hanya pada **hari kerja aktif bursa (Senin – Jumat)**, tidak terdistorsi oleh hari libur akhir pekan (Sabtu & Minggu).

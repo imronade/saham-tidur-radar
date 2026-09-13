@@ -10,8 +10,8 @@ import yfinance as yf
 # KONFIGURASI HALAMAN STREAMLIT
 # ==========================================
 st.set_page_config(
-    page_title="IDX Sleeping Stock Radar",
-    page_icon="💤",
+    page_title="IDX Stock Radar",
+    page_icon="📡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -416,8 +416,8 @@ with st.sidebar:
 # ==========================================
 col_title, col_btn = st.columns([3, 1.5])
 with col_title:
-    st.title("💤 IDX Sleeping Stock Radar")
-    st.caption("Pantau saham tidur, evaluasi **Winrate** & **Rata-rata Keuntungan**, filter Syariah & Tanggal, dan amankan profit.")
+    st.title("📡 IDX Stock Radar")
+    st.caption("Pantau saham, evaluasi, pantau, dan amankan profit")
 
 with col_btn:
     if is_editor:
@@ -1468,195 +1468,159 @@ if is_editor:
 # ==========================================
 st.markdown("---")
 with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expanded=False):
-    st.caption("Riwayat emiten yang telah selesai ditradingkan (Realisasi Profit & Cut Loss)")
-    tab_cuan_hist, tab_gagal_hist = st.tabs([
-        "🏆 Saham yang Sudah Bangun (Cuan)",
-        "🛑 Saham Gagal Bangun (Terkena SL)"
-    ])
+    st.caption("Riwayat seluruh emiten yang telah selesai ditradingkan (Realisasi Profit & Cut Loss)")
 
-    # ----------------------------------------------------
-    # TAB CUAN
-    # ----------------------------------------------------
-    with tab_cuan_hist:
-        hf_col1, hf_col2, hf_col3, hf_col4 = st.columns([1.5, 1.5, 1.5, 1.5])
-        with hf_col1:
-            kat_hist_filter = st.selectbox(
-                "🎯 Filter Kategori:",
-                ["Semua Kategori"] + SCREENER_CATEGORIES,
-                key="filter_hist_cuan_kat"
-            )
-        with hf_col2:
-            syariah_hist_filter = st.selectbox(
-                "🕌 Filter Syariah:",
-                ["Semua Histori", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
-                key="filter_hist_syariah"
-            )
-        with hf_col3:
-            search_hist_query = st.text_input("🔍 Cari Kode:", placeholder="misal: BUMI", key="search_hist")
-        with hf_col4:
-            date_filter_hist = st.date_input(
-                "📅 Filter Tgl Bangun:",
-                value=(),
-                key="date_filter_hist",
-                help="Pilih 1 tanggal atau rentang tanggal."
-            )
+    # Filter bar
+    hf_col1, hf_col2, hf_col3, hf_col4, hf_col5 = st.columns([1.6, 1.5, 1.4, 1.4, 1.5])
+    with hf_col1:
+        filter_closed_status = st.selectbox(
+            "📊 Status Hasil:",
+            ["Semua (Profit & Loss)", "🟢 Hanya Profit", "🔴 Hanya Loss"],
+            key="filter_closed_status"
+        )
+    with hf_col2:
+        filter_closed_kat = st.selectbox(
+            "🎯 Kategori Screener:",
+            ["Semua Kategori"] + SCREENER_CATEGORIES,
+            key="filter_closed_kat"
+        )
+    with hf_col3:
+        filter_closed_syariah = st.selectbox(
+            "🕌 Syariah:",
+            ["Semua Histori", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
+            key="filter_closed_syariah"
+        )
+    with hf_col4:
+        filter_closed_search = st.text_input(
+            "🔍 Cari Kode:", placeholder="misal: MSKY", key="filter_closed_search"
+        )
+    with hf_col5:
+        filter_closed_date = st.date_input(
+            "📅 Filter Tgl Selesai:",
+            value=(),
+            key="filter_closed_date",
+            help="Pilih 1 tanggal atau rentang tanggal selesai/exit."
+        )
 
-        filtered_hist = []
-        for h in history_list:
-            if kat_hist_filter != "Semua Kategori" and h.get("category", "Saham Tidur") != kat_hist_filter:
-                continue
-            if syariah_hist_filter == "Hanya Syariah (ISSI)" and not h.get("is_syariah", True):
-                continue
-            if syariah_hist_filter == "Hanya Non-Syariah" and h.get("is_syariah", True):
-                continue
-            if search_hist_query:
-                if search_hist_query.upper().strip() not in h.get("ticker", "").upper():
-                    continue
-            if not is_date_in_filter(h.get("awakened_date"), date_filter_hist):
-                continue
-            filtered_hist.append(h)
+    # Satukan data history cuan dan failed/cut loss ke dalam 1 list
+    combined_closed = []
+    for h in history_list:
+        gain_val = float(h.get("gain_pct", 0.0))
+        combined_closed.append({
+            "type": "PROFIT",
+            "ticker": h["ticker"],
+            "category": h.get("category", "Saham Tidur"),
+            "is_syariah": h.get("is_syariah", True),
+            "entry_date": h.get("entry_date", "-"),
+            "exit_date": h.get("awakened_date", "-"),
+            "hold_days": int(h.get("hold_days", 0)),
+            "entry_price": int(h.get("entry_price", 0)),
+            "exit_price": int(h.get("exit_price", 0)),
+            "return_pct": gain_val,
+            "status_pl": f"🟢 Profit (+{gain_val:.2f}%)",
+            "level_sl": "-",
+            "note": h.get("note", "-")
+        })
 
-        filtered_hist.sort(key=lambda x: str(x.get("awakened_date", x.get("entry_date", ""))), reverse=True)
+    for f in failed_list:
+        loss_val = float(f.get("loss_pct", 0.0))
+        sl_val = int(f.get("sl", 0))
+        combined_closed.append({
+            "type": "LOSS",
+            "ticker": f["ticker"],
+            "category": f.get("category", "Saham Tidur"),
+            "is_syariah": f.get("is_syariah", True),
+            "entry_date": f.get("entry_date", "-"),
+            "exit_date": f.get("exit_date", "-"),
+            "hold_days": int(f.get("hold_days", 0)),
+            "entry_price": int(f.get("entry_price", 0)),
+            "exit_price": int(f.get("exit_price", 0)),
+            "return_pct": loss_val,
+            "status_pl": f"🔴 Loss ({loss_val:.2f}%)",
+            "level_sl": f"Rp {sl_val}" if sl_val > 0 else "-",
+            "note": f.get("note", "-")
+        })
 
-        display_hist = []
-        for h in filtered_hist:
-            display_hist.append({
-                "Kode": h["ticker"],
-                "Kategori": h.get("category", "Saham Tidur"),
-                "Syariah": "✅" if h.get("is_syariah", True) else "-",
-                "Tgl Masuk": h.get("entry_date", "-"),
-                "Tgl Bangun": h.get("awakened_date", "-"),
-                "Hold": int(h.get("hold_days", 0)),
-                "Harga Masuk": int(h.get("entry_price", 0)),
-                "Harga Jual": int(h.get("exit_price", 0)),
-                "Realisasi Cuan (%)": round(float(h.get("gain_pct", 0)), 2),
-                "Catatan": h.get("note", "-")
-            })
+    # Filter logic
+    filtered_closed = []
+    for c in combined_closed:
+        # Filter Profit / Loss
+        if filter_closed_status == "🟢 Hanya Profit" and c["type"] != "PROFIT":
+            continue
+        if filter_closed_status == "🔴 Hanya Loss" and c["type"] != "LOSS":
+            continue
 
-        df_hist = pd.DataFrame(display_hist)
-        if not df_hist.empty:
-            st.dataframe(
-                df_hist,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Kode": st.column_config.TextColumn("Kode", width="small"),
-                    "Kategori": st.column_config.TextColumn("Kategori", width="medium"),
-                    "Syariah": st.column_config.TextColumn("Syariah", width="small"),
-                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
-                    "Tgl Bangun": st.column_config.TextColumn("Tgl Bangun", width="small"),
-                    "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
-                    "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
-                    "Harga Jual": st.column_config.NumberColumn("Harga Jual", format="Rp %d", width="small"),
-                    "Realisasi Cuan (%)": st.column_config.NumberColumn("Realisasi Cuan", format="+%.2f%%", width="small"),
-                    "Catatan": st.column_config.TextColumn("Catatan / Alasan", width="large"),
-                }
-            )
-            df_hist_export = df_hist.copy()
-            df_hist_export["Hold"] = df_hist_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
-            csv_hist = df_hist_export.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 Export Histori Cuan ke .CSV",
-                data=csv_hist,
-                file_name=f"histori_saham_bangun_{datetime.date.today().strftime('%Y%m%d')}.csv",
-                mime="text/csv",
-                key="btn_download_csv_cuan"
-            )
-        else:
-            st.info("Tidak ada riwayat histori cuan yang sesuai filter.")
+        # Filter Kategori
+        if filter_closed_kat != "Semua Kategori" and c["category"] != filter_closed_kat:
+            continue
 
-    # ----------------------------------------------------
-    # TAB GAGAL BANGUN (CUT LOSS)
-    # ----------------------------------------------------
-    with tab_gagal_hist:
-        gf_col1, gf_col2, gf_col3, gf_col4 = st.columns([1.5, 1.5, 1.5, 1.5])
-        with gf_col1:
-            kat_gagal_filter = st.selectbox(
-                "🎯 Filter Kategori:",
-                ["Semua Kategori"] + SCREENER_CATEGORIES,
-                key="filter_hist_gagal_kat"
-            )
-        with gf_col2:
-            syariah_gagal_filter = st.selectbox(
-                "🕌 Filter Syariah:",
-                ["Semua Histori", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
-                key="filter_gagal_syariah"
-            )
-        with gf_col3:
-            search_gagal_query = st.text_input("🔍 Cari Kode:", placeholder="misal: ZINC", key="search_gagal")
-        with gf_col4:
-            date_filter_gagal = st.date_input(
-                "📅 Filter Tgl Cut Loss:",
-                value=(),
-                key="date_filter_gagal",
-                help="Pilih 1 tanggal atau 2 tanggal untuk rentang periode."
-            )
+        # Filter Syariah
+        if filter_closed_syariah == "Hanya Syariah (ISSI)" and not c["is_syariah"]:
+            continue
+        if filter_closed_syariah == "Hanya Non-Syariah" and c["is_syariah"]:
+            continue
 
-        failed_list_data = data.get("failed_history", [])
-        filtered_gagal = []
-        for g in failed_list_data:
-            if kat_gagal_filter != "Semua Kategori" and g.get("category", "Saham Tidur") != kat_gagal_filter:
-                continue
-            if syariah_gagal_filter == "Hanya Syariah (ISSI)" and not g.get("is_syariah", True):
-                continue
-            if syariah_gagal_filter == "Hanya Non-Syariah" and g.get("is_syariah", True):
-                continue
-            if search_gagal_query:
-                if search_gagal_query.upper().strip() not in g.get("ticker", "").upper():
-                    continue
-            if not is_date_in_filter(g.get("exit_date"), date_filter_gagal):
-                continue
-            filtered_gagal.append(g)
+        # Filter Search
+        if filter_closed_search and filter_closed_search.upper().strip() not in c["ticker"].upper():
+            continue
 
-        filtered_gagal.sort(key=lambda x: str(x.get("exit_date", x.get("entry_date", ""))), reverse=True)
+        # Filter Date
+        if not is_date_in_filter(c["exit_date"], filter_closed_date):
+            continue
 
-        display_gagal = []
-        for g in filtered_gagal:
-            display_gagal.append({
-                "Kode": g["ticker"],
-                "Kategori": g.get("category", "Saham Tidur"),
-                "Syariah": "✅" if g.get("is_syariah", True) else "-",
-                "Tgl Masuk": g.get("entry_date", "-"),
-                "Tgl Cut Loss": g.get("exit_date", "-"),
-                "Hold": int(g.get("hold_days", 0)),
-                "Harga Masuk": int(g.get("entry_price", 0)),
-                "Harga Cut Loss": int(g.get("exit_price", 0)),
-                "Realisasi Rugi (%)": round(float(g.get("loss_pct", 0)), 2),
-                "Level SL": f"Rp {int(g.get('sl', 0))}" if int(g.get("sl", 0)) > 0 else "-",
-                "Status Exit": g.get("status_exit", "KENA SL 🛑"),
-                "Catatan": g.get("note", "-")
-            })
+        filtered_closed.append(c)
 
-        df_gagal = pd.DataFrame(display_gagal)
-        if not df_gagal.empty:
-            st.dataframe(
-                df_gagal,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Kode": st.column_config.TextColumn("Kode", width="small"),
-                    "Kategori": st.column_config.TextColumn("Kategori", width="medium"),
-                    "Syariah": st.column_config.TextColumn("Syariah", width="small"),
-                    "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
-                    "Tgl Cut Loss": st.column_config.TextColumn("Tgl Cut Loss", width="small"),
-                    "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
-                    "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
-                    "Harga Cut Loss": st.column_config.NumberColumn("Harga Cut Loss", format="Rp %d", width="small"),
-                    "Realisasi Rugi (%)": st.column_config.NumberColumn("Realisasi Rugi", format="%.2f%%", width="small"),
-                    "Level SL": st.column_config.TextColumn("Level SL", width="small"),
-                    "Status Exit": st.column_config.TextColumn("Status Exit", width="medium"),
-                    "Catatan": st.column_config.TextColumn("Catatan / Alasan", width="large"),
-                }
-            )
-            df_gagal_export = df_gagal.copy()
-            df_gagal_export["Hold"] = df_gagal_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
-            csv_gagal = df_gagal_export.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 Export Histori Gagal Bangun ke .CSV",
-                data=csv_gagal,
-                file_name=f"histori_saham_gagal_bangun_{datetime.date.today().strftime('%Y%m%d')}.csv",
-                mime="text/csv",
-                key="btn_download_csv_gagal"
-            )
-        else:
-            st.info("Tidak ada riwayat saham gagal bangun yang sesuai filter.")
+    # Urutkan tanggal selesai terbaru ke terlama
+    filtered_closed.sort(key=lambda x: str(x.get("exit_date", x.get("entry_date", ""))), reverse=True)
+
+    display_closed = []
+    for c in filtered_closed:
+        display_closed.append({
+            "Kode": c["ticker"],
+            "Kategori": c["category"],
+            "Syariah": "✅" if c["is_syariah"] else "-",
+            "Status": c["status_pl"],
+            "Tgl Masuk": c["entry_date"],
+            "Tgl Selesai": c["exit_date"],
+            "Hold": c["hold_days"],
+            "Harga Masuk": c["entry_price"],
+            "Harga Selesai": c["exit_price"],
+            "Realisasi (%)": round(c["return_pct"], 2),
+            "Level SL": c["level_sl"],
+            "Catatan / Alasan Exit": c["note"]
+        })
+
+    df_closed = pd.DataFrame(display_closed)
+    if not df_closed.empty:
+        st.dataframe(
+            df_closed,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Kode": st.column_config.TextColumn("Kode", width="small"),
+                "Kategori": st.column_config.TextColumn("Kategori Screener", width="medium"),
+                "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
+                "Status": st.column_config.TextColumn("Status", width="medium", help="Keterangan Profit / Loss"),
+                "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+                "Tgl Selesai": st.column_config.TextColumn("Tgl Selesai", width="small"),
+                "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
+                "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
+                "Harga Selesai": st.column_config.NumberColumn("Harga Selesai", format="Rp %d", width="small"),
+                "Realisasi (%)": st.column_config.NumberColumn("Realisasi P/L", format="%+.2f%%", width="small"),
+                "Level SL": st.column_config.TextColumn("Level SL", width="small"),
+                "Catatan / Alasan Exit": st.column_config.TextColumn("Catatan / Alasan Exit", width="large"),
+            }
+        )
+
+        df_closed_export = df_closed.copy()
+        df_closed_export["Hold"] = df_closed_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
+        csv_closed = df_closed_export.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 Export Riwayat Trade Selesai ke .CSV",
+            data=csv_closed,
+            file_name=f"riwayat_trade_selesai_{datetime.date.today().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            key="btn_download_csv_closed_all"
+        )
+    else:
+        st.info("Tidak ada data riwayat trade selesai yang sesuai filter.")

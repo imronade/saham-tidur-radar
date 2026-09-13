@@ -1,12 +1,12 @@
-# 💤 IDX Sleeping Stock Radar
+# 📡 IDX Stock Radar
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://radar-saham-tidur.streamlit.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
-Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan **saham tidur (*dormant stocks*)** di Bursa Efek Indonesia (IDX / BEI). Aplikasi ini dirancang khusus untuk memonitor potensi bangunnya saham gocap/tidur dengan sistem target multi-level Take Profit, kalkulasi hari kerja bursa, serta pencatatan histori realisasi profit.
+Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan saham di Bursa Efek Indonesia (IDX / BEI) dengan prinsip: **Pantau saham, evaluasi, pantau, dan amankan profit**. Mendukung 3 kategori screener strategi (**Flow Masuk**, **Flow Masuk + Fundamental OK**, dan **Saham Tidur**), sistem target multi-level Take Profit & Stop Loss, kalkulasi hari kerja bursa, serta pencatatan histori realisasi profit/loss terpadu.
 
-🌐 **Aplikasi Live Online**: [IDX Sleeping Stock Radar · Streamlit](https://radar-saham-tidur.streamlit.app/)
+🌐 **Aplikasi Live Online**: [IDX Stock Radar · Streamlit](https://radar-saham-tidur.streamlit.app/)
 
 ---
 
@@ -67,12 +67,13 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan *
 * **Auto-Reset Form ke Blank**: Setelah tombol *Proses & Impor* diklik, kedua kotak teks otomatis bersih kembali (kosong/blank) sehingga siap untuk aktivitas screening berikutnya.
 * **Proteksi Anti-Duplikasi (*First Entry Lock*)**: Emiten yang sudah ada di watchlist aktif tidak akan terduplikasi atau tertimpa, sehingga tanggal awal masuk dan modal harga awal tetap aman terlindungi.
 
-### 8. 📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)
-* Diletakkan rapi dalam panel expander di bawah tabel screener utama, terbagi menjadi 2 tab:
-  * **🏆 Saham Sudah Bangun (Cuan)**: Riwayat emiten yang berhasil take profit.
-  * **🛑 Saham Gagal Bangun (Terkena SL)**: Riwayat emiten yang terkena batas stop loss / cut loss disiplin.
+### 8. 📜 Riwayat Trade Selesai (Satu Tabel Terpadu Histori Cuan & Cut Loss)
+* Menggabungkan riwayat take profit (cuan) dan cut loss (stop loss) ke dalam **satu tabel tunggal** yang ringkas dan rapi.
+* **Kolom Status Hasil**: Memberikan label visual jelas `🟢 Profit (+X.XX%)` atau `🔴 Loss (-X.XX%)`.
+* **Filter Interaktif Lengkap**: Filter dropdown status (`Semua (Profit & Loss)`, `🟢 Hanya Profit`, `🔴 Hanya Loss`), Kategori Screener, Syariah ISSI, pencarian kode saham, dan rentang tanggal keluar/selesai.
 * Dilengkapi kolom Kategori Screener untuk menganalisis strategi mana yang paling efektif.
-* **Pengelolaan Penuh di Mode Editor**: Edit data atau centang baris untuk menghapus histori.
+* **Pengelolaan Penuh di Mode Editor**: Edit data, isi catatan manual, atau centang baris untuk menghapus histori.
+* **Export CSV Sekali Klik**: Unduh seluruh riwayat trade selesai yang tersaring ke file `.CSV`.
 
 ### 9. 💾 Backup & Restore Database JSON (Perlindungan Data Anti-Hilang)
 * **1-Click Backup**: Di sidebar saat login Editor, tersedia tombol **📥 Download stocks_data.json** untuk mengunduh seluruh database ke laptop Anda kapan saja.

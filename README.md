@@ -64,7 +64,9 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
   * **Kolom Kiri (🕌 Syariah ISSI)**: Hasil screener Stockbit dengan filter Stock Universe = `ISSI` (otomatis ditandai Syariah).
   * **Kolom Kanan (🏢 IHSG / Non-Syariah - Opsional)**: Hasil screener Stockbit dengan filter Universe `All Stocks` atau Non-Syariah.
 * **Auto-Reset Form ke Blank**: Setelah tombol *Proses & Impor* diklik, kedua kotak teks otomatis bersih kembali (kosong/blank) sehingga siap untuk aktivitas screening berikutnya.
-* **Proteksi Anti-Duplikasi (*First Entry Lock*)**: Emiten yang sudah ada di watchlist aktif tidak akan terduplikasi atau tertimpa, sehingga tanggal awal masuk dan modal harga awal tetap aman terlindungi.
+* **Proteksi Anti-Duplikasi per Kategori (*First Entry Lock per Kategori*)**: Emiten yang sama diperbolehkan masuk ke beberapa kategori berbeda secara independen (misal tgl 1 Sept di `Saham Tidur` @ Rp 50, lalu tgl 2 Sept masuk di `Flow Masuk` @ Rp 54) tanpa saling menimpa. Duplikasi hanya dicegah jika diimpor ke kategori yang sama.
+* **Deteksi Saham Beririsan (*Multi-Screener Confluence*)**: Saham yang aktif di lebih dari 1 kategori secara otomatis diberi penanda visual di tabel (`🔥 [2 Tab]` atau `⭐ [COMBO 3 Tab]`), lengkap dengan banner rekap saham multi-setup di atas tab screener.
+* **Exit Fleksibel (Bungkus Cuan / Cut Loss Satuan vs Borongan)**: Saat menutup posisi emiten yang aktif di beberapa kategori, pengguna dapat memilih untuk merealisasikan kategori tertentu saja atau keluar dari semua posisi sekaligus.
 
 ### 8. 📜 Riwayat Trade Selesai (Satu Tabel Terpadu Histori Cuan & Cut Loss)
 * Menggabungkan riwayat take profit (cuan) dan cut loss (stop loss) ke dalam **satu tabel tunggal** yang ringkas dan rapi.

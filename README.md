@@ -68,15 +68,34 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
 * **Deteksi Saham Beririsan (*Multi-Screener Confluence*)**: Saham yang aktif di lebih dari 1 kategori secara otomatis diberi penanda visual di tabel (`🔥 [2 Tab]` atau `⭐ [COMBO 3 Tab]`), lengkap dengan banner rekap saham multi-setup di atas tab screener.
 * **Exit Fleksibel (Bungkus Cuan / Cut Loss Satuan vs Borongan)**: Saat menutup posisi emiten yang aktif di beberapa kategori, pengguna dapat memilih untuk merealisasikan kategori tertentu saja atau keluar dari semua posisi sekaligus.
 
-### 8. 📜 Riwayat Trade Selesai (Satu Tabel Terpadu Histori Cuan & Cut Loss)
-* Menggabungkan riwayat take profit (cuan) dan cut loss (stop loss) ke dalam **satu tabel tunggal** yang ringkas dan rapi.
-* **Kolom Status Hasil**: Memberikan label visual jelas `🟢 Profit (+X.XX%)` atau `🔴 Loss (-X.XX%)`.
-* **Filter Interaktif Lengkap**: Filter dropdown status (`Semua (Profit & Loss)`, `🟢 Hanya Profit`, `🔴 Hanya Loss`), Kategori Screener, Syariah ISSI, pencarian kode saham, dan rentang tanggal keluar/selesai.
-* Dilengkapi kolom Kategori Screener untuk menganalisis strategi mana yang paling efektif.
-* **Pengelolaan Penuh di Mode Editor**: Edit data, isi catatan manual, atau centang baris untuk menghapus histori.
-* **Export CSV Sekali Klik**: Unduh seluruh riwayat trade selesai yang tersaring ke file `.CSV`.
+### 8. 📁 Upload File Screener (Excel .xlsx / CSV)
+* **Import File Sekali Klik**: Tersedia tab khusus **Upload Excel / CSV** di Panel Editor untuk mengunggah file hasil screener seperti file `HASIL SCREENER SAHAM BARU BANGUN TIDUR.xlsx` (mendukung sheet `AGUS-SEPT`).
+* **Auto-Routing Status `Done`**:
+  * Baris dengan keterangan **Done** otomatis dialihkan langsung ke tabel **Riwayat Trade Selesai** (meskipun harga exit / persentase cuan belum tercatat).
+  * Baris tanpa status Done otomatis masuk ke **Watchlist Aktif** dengan riwayat hitungan kemunculan yang tersimpan.
+* **Auto-Deteksi Format Kolom & Tanggal**: Mengenali kolom *Hari, Tanggal, Emiten Saham, Harga Penutupan, Keterangan*, serta menangani format tanggal Indonesia maupun Excel timestamp.
 
-### 9. 💾 Backup & Restore Database JSON (Perlindungan Data Anti-Hilang)
+### 9. 📝 Kolom Keterangan & Pemindahan Cepat Saham Selesai
+* **Kolom Keterangan di Seluruh Tabel**:
+  * Terletak tepat sebelum kolom **Status** di ketiga tab hasil screener maupun tabel **Riwayat Trade Selesai**.
+  * Berisi label dinamis seperti `Mulai gerak`, `Done`, atau catatan pergerakan bebas lainnya.
+* **Fitur Ubah ke `Done` di Kelola Watchlist**:
+  * Di tab **Kelola Watchlist**, Anda dapat langsung mengetikkan `Done` pada kolom Keterangan suatu saham lalu klik **Simpan Perubahan**.
+  * Sistem akan secara otomatis memindahkan saham tersebut dari Watchlist Aktif ke **Riwayat Trade Selesai**.
+
+### 10. 🧹 Reset Seluruh Data Tabel
+* Di sidebar saat login Editor, tersedia fitur **Reset Seluruh Data Tabel** dengan konfirmasi pengamanan.
+* Menghapus dan mengosongkan seluruh isi database (Watchlist Aktif, Histori Cuan, dan Histori Cut Loss) secara instan saat Anda ingin memulai musim screening baru atau setelah mengosongkan data lama.
+
+### 11. 🔍 Pelacakan Frekuensi & Tanggal Kemunculan Screener (Hit Tracker)
+* **Pencatatan Otomatis Kemunculan Berulang**: Saat melakukan import harian, jika emiten yang sudah ada di watchlist terdeteksi kembali pada tanggal baru, sistem secara otomatis mencatat tanggal kemunculan (`hit_dates`) dan meningkatkan hitungan kemunculan (`hit_count`).
+* **Kolom Kemunculan di Seluruh Tabel**: Ditampilkan dengan format ringkas tanggal (`DD/MM`) seperti `1x (01/09)`, `⚡ 2x (01/09, 03/09)`, `🔥 3x (01/09, 03/09, 08/09)`.
+
+### 12. 📜 Riwayat Trade Selesai (Satu Tabel Terpadu)
+* Menggabungkan riwayat take profit, cut loss, dan saham berstatus `Done` ke dalam **satu tabel tunggal** yang ringkas dan rapi.
+* Filter interaktif lengkap untuk menyaring status hasil, kategori, syariah, pencarian emiten, dan rentang tanggal keluar/selesai.
+
+### 13. 💾 Backup & Restore Database JSON (Perlindungan Data Anti-Hilang)
 * **1-Click Backup**: Di sidebar saat login Editor, tersedia tombol **📥 Download stocks_data.json** untuk mengunduh seluruh database ke laptop Anda kapan saja.
 * **Restore Fleksibel**: Dilengkapi fitur upload JSON cadangan dengan dukungan UTF-8 tanpa BOM.
 

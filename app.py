@@ -151,6 +151,202 @@ def parse_stockbit_screener(text):
     return results
 
 # ==========================================
+# FUNGSI PARSER FILE EXCEL / CSV SCREENER
+# ==========================================
+def parse_screener_file(file_bytes, filename):
+    """
+    Mengekstrak data emiten, tanggal, harga penutupan, dan keterangan
+    dari file Excel (.xlsx / .xls) atau CSV.
+    Mendukung format 'Hari, Tanggal, Emiten Saham, Harga Penutupan, Keterangan'
+    seperti sheet AGUS-SEPT, maupun format tabel CSV umum.
+    """
+    records = []
+    fname_lower = filename.lower()
+    
+    if fname_lower.endswith(".csv"):
+        try:
+            import io
+            df = pd.read_csv(io.BytesIO(file_bytes))
+            # Identifikasi kolom
+            cols_lower = {str(c).lower().strip(): c for c in df.columns}
+            t_col = None
+            for candidate in ["emiten", "kode", "ticker", "symbol", "emiten saham", "saham"]:
+                for cl in cols_lower:
+                    if candidate in cl:
+                        t_col = cols_lower[cl]
+                        break
+                if t_col:
+                    break
+            
+            p_col = None
+            for candidate in ["harga", "price", "close", "penutupan", "harga penutupan"]:
+                for cl in cols_lower:
+                    if candidate in cl:
+                        p_col = cols_lower[cl]
+                        break
+                if p_col:
+                    break
+
+            d_col = None
+            for candidate in ["tanggal", "date", "tgl"]:
+                for cl in cols_lower:
+                    if candidate in cl:
+                        d_col = cols_lower[cl]
+                        break
+                if d_col:
+                    break
+
+            k_col = None
+            for candidate in ["keterangan", "ket", "status", "note"]:
+                for cl in cols_lower:
+                    if candidate in cl:
+                        k_col = cols_lower[cl]
+                        break
+                if k_col:
+                    break
+
+            current_d = str(datetime.date.today())
+            for _, row in df.iterrows():
+                if t_col and pd.notna(row[t_col]):
+                    raw_t = str(row[t_col]).strip().upper()
+                    m_tick = re.search(r'\b[A-Za-z]{4}\b', raw_t)
+                    if not m_tick:
+                        continue
+                    ticker = m_tick.group(0).upper()
+                    
+                    p_val = 0
+                    if p_col and pd.notna(row[p_col]):
+                        try:
+                            p_val = int(round(float(str(row[p_col]).replace(",", ""))))
+                        except:
+                            p_val = 0
+                    
+                    if d_col and pd.notna(row[d_col]):
+                        raw_date = str(row[d_col]).strip()
+                        current_d = normalize_parsed_date(raw_date)
+                    
+                    ket_val = str(row[k_col]).strip() if (k_col and pd.notna(row[k_col])) else ""
+                    records.append({
+                        "ticker": ticker,
+                        "date": current_d,
+                        "price": p_val,
+                        "ket": ket_val
+                    })
+            return records
+        except Exception as e:
+            st.error(f"Gagal memproses file CSV: {e}")
+            return []
+
+    # File Excel (.xlsx / .xls)
+    try:
+        import openpyxl, io
+        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+        # Prioritaskan sheet AGUS-SEPT jika ada, atau sheet pertama
+        sheet_name = "AGUS-SEPT" if "AGUS-SEPT" in wb.sheetnames else wb.sheetnames[0]
+        ws = wb[sheet_name]
+
+        current_date = str(datetime.date.today())
+        current_day = ""
+
+        # Deteksi header di 5 baris pertama
+        header_row_idx = 0
+        ticker_col_idx = 3  # default kolom ke-4 (index 3)
+        price_col_idx = 4   # default kolom ke-5 (index 4)
+        date_col_idx = 2    # default kolom ke-3 (index 2)
+        day_col_idx = 1     # default kolom ke-2 (index 1)
+        ket_col_idx = 5     # default kolom ke-6 (index 5)
+
+        for r_idx, row in enumerate(ws.iter_rows(values_only=True)):
+            if r_idx > 5:
+                break
+            row_str = [str(cell).lower() if cell is not None else "" for cell in row]
+            for c_idx, val in enumerate(row_str):
+                if any(x in val for x in ["emiten", "kode", "ticker", "symbol"]):
+                    ticker_col_idx = c_idx
+                    header_row_idx = r_idx
+                elif any(x in val for x in ["harga", "price", "penutupan"]):
+                    price_col_idx = c_idx
+                elif any(x in val for x in ["tanggal", "date"]):
+                    date_col_idx = c_idx
+                elif "hari" in val or "day" in val:
+                    day_col_idx = c_idx
+                elif any(x in val for x in ["keterangan", "ket", "status"]):
+                    ket_col_idx = c_idx
+
+        for r_idx, row in enumerate(ws.iter_rows(values_only=True)):
+            if r_idx <= header_row_idx:
+                continue
+
+            day_cell = row[day_col_idx] if day_col_idx < len(row) else None
+            date_cell = row[date_col_idx] if date_col_idx < len(row) else None
+            tick_cell = row[ticker_col_idx] if ticker_col_idx < len(row) else None
+            price_cell = row[price_col_idx] if price_col_idx < len(row) else None
+            ket_cell = row[ket_col_idx] if ket_col_idx < len(row) else None
+
+            if day_cell is not None and str(day_cell).strip() != "":
+                current_day = str(day_cell).strip()
+
+            if date_cell is not None:
+                parsed_d = normalize_parsed_date(date_cell)
+                if parsed_d:
+                    current_date = parsed_d
+
+            if tick_cell is not None and str(tick_cell).strip() != "":
+                raw_t = str(tick_cell).strip().upper()
+                m_tick = re.search(r'\b[A-Za-z]{4}\b', raw_t)
+                if not m_tick:
+                    continue
+                clean_ticker = m_tick.group(0).upper()
+                if clean_ticker in ["OPEN", "HIGH", "LOWS", "LAST", "NAME", "CODE", "DATE", "HARI"]:
+                    continue
+
+                p_val = 0
+                if price_cell is not None:
+                    try:
+                        p_val = int(round(float(str(price_cell).replace(",", ""))))
+                    except:
+                        p_val = 0
+
+                ket_str = str(ket_cell).strip() if ket_cell is not None else ""
+                records.append({
+                    "ticker": clean_ticker,
+                    "date": current_date,
+                    "price": p_val,
+                    "ket": ket_str
+                })
+
+        return records
+    except Exception as e:
+        st.error(f"Gagal membaca file Excel: {e}")
+        return []
+
+def normalize_parsed_date(val):
+    """Normalisasi tanggal dari Excel datetime atau string ke format YYYY-MM-DD"""
+    if isinstance(val, (datetime.datetime, datetime.date)):
+        y, m, d = val.year, val.month, val.day
+        # Di Excel, kadang hari dan bulan tertukar jika day <= 12 dan month=9 (September)
+        if m in [2, 4, 7, 8] and d == 9:
+            return f"{y}-09-{m:02d}"
+        return f"{y}-{m:02d}-{d:02d}"
+    elif isinstance(val, str):
+        v = val.strip()
+        if not v:
+            return None
+        parts = v.split("/")
+        if len(parts) == 3:
+            m, d, y = parts
+            if len(y) == 2:
+                y = "20" + y
+            try:
+                return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+            except:
+                return v
+        parts = v.split("-")
+        if len(parts) == 3:
+            return v
+    return None
+
+# ==========================================
 # FUNGSI LOAD & SAVE DATA
 # ==========================================
 def load_data():
@@ -297,17 +493,59 @@ def load_data():
                 s["sl"] = 0
             if "category" not in s:
                 s["category"] = "Saham Tidur"
+            if "ket" not in s:
+                s["ket"] = ""
+            if "hit_dates" not in s or not s["hit_dates"]:
+                entry_d = s.get("entry_date")
+                s["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [str(datetime.date.today())]
+            if "hit_count" not in s:
+                s["hit_count"] = len(s["hit_dates"])
         for h in data.get("awakened_history", []):
             if "category" not in h:
                 h["category"] = "Saham Tidur"
+            if "ket" not in h:
+                h["ket"] = "Done" if "DONE" in str(h.get("status_exit", "")).upper() else ""
+            if "hit_dates" not in h or not h["hit_dates"]:
+                entry_d = h.get("entry_date")
+                h["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [h.get("awakened_date", "-")]
+            if "hit_count" not in h:
+                h["hit_count"] = len(h["hit_dates"])
         for f in data.get("failed_history", []):
             if "category" not in f:
                 f["category"] = "Saham Tidur"
+            if "ket" not in f:
+                f["ket"] = ""
+            if "hit_dates" not in f or not f["hit_dates"]:
+                entry_d = f.get("entry_date")
+                f["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [f.get("exit_date", "-")]
+            if "hit_count" not in f:
+                f["hit_count"] = len(f["hit_dates"])
         return data
 
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+def format_hit_dates(hit_dates):
+    if not hit_dates:
+        return "-"
+    formatted = []
+    for d in hit_dates:
+        parts = str(d).strip().split("-")
+        if len(parts) == 3:
+            formatted.append(f"{parts[2]}/{parts[1]}")
+        else:
+            formatted.append(str(d))
+    return ", ".join(formatted)
+
+def format_hit_display(hit_count, hit_dates):
+    dates_str = format_hit_dates(hit_dates)
+    if hit_count >= 3:
+        return f"🔥 {hit_count}x ({dates_str})"
+    elif hit_count == 2:
+        return f"⚡ 2x ({dates_str})"
+    else:
+        return f"1x ({dates_str})"
 
 # ==========================================
 # FETCH HARGA TERAKHIR DARI YAHOO FINANCE
@@ -383,6 +621,24 @@ with st.sidebar:
                             st.error("Format JSON tidak valid!")
                     except Exception as e:
                         st.error(f"Gagal memulihkan: {e}")
+
+        # RESET SEMUA DATA TABEL
+        st.markdown("---")
+        with st.expander("⚠️ Reset Seluruh Data Tabel"):
+            st.caption("Fungsi ini akan **mengosongkan seluruh tabel** (Watchlist Aktif, Histori Cuan, dan Histori Cut Loss). Pastikan telah mendownload backup di atas sebelum mereset!")
+            confirm_reset = st.checkbox("Saya paham & yakin ingin mereset seluruh database", key="chk_confirm_reset_all")
+            if confirm_reset:
+                if st.button("🗑️ Eksekusi Reset Semua Data", type="primary", use_container_width=True, key="btn_exec_reset_all"):
+                    empty_data = {
+                        "active_stocks": [],
+                        "awakened_history": [],
+                        "failed_history": []
+                    }
+                    save_data(empty_data)
+                    st.session_state["data"] = empty_data
+                    st.toast("Seluruh data tabel berhasil direset menjadi kosong!", icon="🧹")
+                    st.success("Seluruh data tabel telah dikosongkan.")
+                    st.rerun()
     else:
         st.info("👁️ **Mode: Viewer (Hanya Lihat)**")
         st.caption("Pengunjung publik hanya dapat melihat data, memfilter syariah & tanggal, mengurutkan tabel, dan mengunduh CSV.")
@@ -729,6 +985,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
             "Kode": kode_display,
             "Syariah": "✅" if s.get("is_syariah") else "-",
             "Tgl Masuk": s.get("entry_date", "-"),
+            "Kemunculan": format_hit_display(s.get("hit_count", 1), s.get("hit_dates", [s.get("entry_date")])),
             "Hold": hold_work_days,
             "Harga Masuk": entry,
             "Harga Sekarang": curr,
@@ -737,6 +994,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
             "TP 1": tp1_str,
             "TP 2": tp2_str,
             "TP 3": tp3_str,
+            "Keterangan": s.get("ket", "") if s.get("ket") else "-",
             "Status": status_pl
         })
 
@@ -750,6 +1008,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
                 "Kode": st.column_config.TextColumn("Kode", width="medium", help="Kode emiten saham & penanda irisan multi-screener"),
                 "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
                 "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+                "Kemunculan": st.column_config.TextColumn("Kemunculan", width="medium", help="Frekuensi dan riwayat tanggal kemunculan screener"),
                 "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small", help="Lama simpan hari kerja bursa (Senin-Jumat)"),
                 "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
                 "Harga Sekarang": st.column_config.NumberColumn("Harga", format="Rp %d", width="small"),
@@ -758,6 +1017,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
                 "TP 1": st.column_config.TextColumn("TP 1", width="small", help="Target Take Profit 1"),
                 "TP 2": st.column_config.TextColumn("TP 2", width="small", help="Target Take Profit 2"),
                 "TP 3": st.column_config.TextColumn("TP 3", width="small", help="Target Take Profit 3"),
+                "Keterangan": st.column_config.TextColumn("Keterangan", width="small", help="Keterangan pergerakan (Mulai gerak, Done, dll)"),
                 "Status": st.column_config.TextColumn("Status", width="medium", help="Status pergerakan harga terhadap modal (Profit / Loss / BEP)"),
             }
         )
@@ -767,6 +1027,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         clean_tickers = [s["ticker"] for s in filtered]
         if len(clean_tickers) == len(df_export):
             df_export["Kode"] = clean_tickers
+        df_export["Kemunculan"] = [f"{s.get('hit_count', 1)}x ({', '.join(s.get('hit_dates', [s.get('entry_date', '-')]))})" for s in filtered]
         df_export["Hold"] = df_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
         csv_tab = df_export.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
@@ -798,12 +1059,26 @@ for s in active_list:
         multi_confluence[t].append(c)
 
 multi_stocks = {t: cats for t, cats in multi_confluence.items() if len(cats) > 1}
-if multi_stocks:
-    badges = []
-    for t, cats in multi_stocks.items():
-        tag = "⭐ [COMBO 3 Tab]" if len(cats) >= 3 else "🔥 [2 Tab]"
-        badges.append(f"**{t}** {tag} ({' + '.join(cats)})")
-    st.info(f"💡 **Multi-Screener Confluence ({len(multi_stocks)} Emiten)**: Saham berikut terkonfirmasi aktif di lebih dari 1 screener: {', '.join(badges)}")
+
+# Cek apakah ada emiten yang terdeteksi berulang kali (Hit >= 2x)
+multi_hits = [s for s in active_list if s.get("hit_count", 1) >= 2]
+
+if multi_stocks or multi_hits:
+    info_parts = []
+    if multi_stocks:
+        badges = []
+        for t, cats in multi_stocks.items():
+            tag = "⭐ [COMBO 3 Tab]" if len(cats) >= 3 else "🔥 [2 Tab]"
+            badges.append(f"**{t}** {tag} ({' + '.join(cats)})")
+        info_parts.append(f"🔥 **Multi-Screener Confluence**: {', '.join(badges)}")
+
+    if multi_hits:
+        hit_badges = []
+        for s in multi_hits:
+            hit_badges.append(f"**{s['ticker']}** [{s.get('category')}] ({s.get('hit_count')}x: {format_hit_dates(s.get('hit_dates'))})")
+        info_parts.append(f"⚡ **Sering Terdeteksi Screener**: {', '.join(hit_badges)}")
+
+    st.info("  \n".join(info_parts))
 
 tab_flow, tab_golden, tab_sleep = st.tabs([
     "🌊 Flow Masuk",
@@ -833,7 +1108,8 @@ if is_editor:
             st.session_state["is_editor"] = False
             st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
             st.rerun()
-    tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_cuan, tab_manage_gagal = st.tabs([
+    tab_upload_file, tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_cuan, tab_manage_gagal = st.tabs([
+        "📁 Upload Excel / CSV",
         "⚡ Quick Import Stockbit",
         "💰 Bungkus Cuan (Take Profit)",
         "🛑 Realisasi SL (Gagal Bangun)",
@@ -842,6 +1118,138 @@ if is_editor:
         "🏆 Kelola Histori Bangun (Centang Hapus / Edit)",
         "🛑 Kelola Gagal Bangun (Centang Hapus / Edit)"
     ])
+
+    # ----------------------------------------------------
+    # TAB 0: UPLOAD EXCEL / CSV SCREENER
+    # ----------------------------------------------------
+    with tab_upload_file:
+        st.markdown("##### 📁 Upload File Hasil Screener (Excel / CSV)")
+        st.caption("Unggah file Excel (`.xlsx`, `.xls`) atau `.csv` hasil screener (seperti sheet `AGUS-SEPT`).")
+        st.info("💡 **Aturan Otomatis Status 'Done'**: Saham dengan keterangan **Done** otomatis dimasukkan ke tabel **Riwayat Trade Selesai** (meskipun harga/cuan belum diketahui). Saham lainnya akan masuk ke **Watchlist Aktif** dengan hitungan kemunculan yang tercatat rapi.")
+
+        u_col1, u_col2 = st.columns([2, 1.5])
+        with u_col1:
+            uploaded_file = st.file_uploader(
+                "Pilih File Excel (.xlsx) atau CSV:",
+                type=["xlsx", "xls", "csv"],
+                key="uploader_screener_file"
+            )
+        with u_col2:
+            upload_target_cat = st.selectbox(
+                "🎯 Kategori Target untuk Saham Baru:",
+                ["💤 Saham Tidur", "🌊 Flow Masuk", "💎 Flow Masuk + Fundamental OK"],
+                index=0,
+                key="upload_file_target_cat",
+                help="Kategori default yang diberikan untuk saham yang masuk ke Watchlist Aktif."
+            )
+            upload_default_syariah = st.checkbox("🕌 Default Tandai sebagai Syariah (ISSI)", value=True, key="chk_upload_default_syariah")
+
+        if uploaded_file is not None:
+            file_bytes = uploaded_file.getvalue()
+            parsed_rows = parse_screener_file(file_bytes, uploaded_file.name)
+            
+            if not parsed_rows:
+                st.warning("Tidak ada data saham yang berhasil diekstrak dari file ini. Pastikan file memiliki kolom emiten/kode saham.")
+            else:
+                st.success(f"Ditemukan **{len(parsed_rows)} baris data** dari file `{uploaded_file.name}`.")
+                
+                # Tampilkan ringkasan data sebelum impor
+                preview_df = pd.DataFrame(parsed_rows)
+                with st.expander(f"🔍 Pratinjau Data ({len(parsed_rows)} baris)", expanded=False):
+                    st.dataframe(preview_df, use_container_width=True, hide_index=True)
+
+                c_done = sum(1 for r in parsed_rows if str(r.get("ket", "")).strip().lower() == "done")
+                c_act = len(parsed_rows) - c_done
+                st.write(f"📊 Ringkasan: **{c_act} baris** untuk Watchlist Aktif | **{c_done} baris** berstatus **Done** (Riwayat Selesai)")
+
+                if st.button("🚀 Proses & Masukkan Data ke Dashboard", type="primary", use_container_width=True, key="btn_apply_upload_file"):
+                    target_cat_clean = upload_target_cat.replace("🌊 ", "").replace("💎 ", "").replace("💤 ", "").strip()
+                    
+                    added_to_active = 0
+                    added_to_done = 0
+                    updated_hits = 0
+                    
+                    # Dictionary saham aktif yang sudah ada untuk matching cepat
+                    active_map = {}
+                    for s in data["active_stocks"]:
+                        key = (s["ticker"], s.get("category", "Saham Tidur"))
+                        active_map[key] = s
+
+                    for row in parsed_rows:
+                        t = row["ticker"]
+                        row_date = row["date"] or str(datetime.date.today())
+                        p_val = row["price"]
+                        ket_val = str(row.get("ket", "")).strip()
+
+                        # Jika berstatus Done, masukkan ke awakened_history
+                        if ket_val.lower() == "done":
+                            # Cek apakah sudah ada entry history persis sama
+                            is_dup_hist = any(
+                                h["ticker"] == t and h.get("entry_date") == row_date
+                                for h in data["awakened_history"]
+                            )
+                            if not is_dup_hist:
+                                new_done = {
+                                    "ticker": t,
+                                    "category": target_cat_clean,
+                                    "is_syariah": upload_default_syariah,
+                                    "entry_date": row_date,
+                                    "awakened_date": row_date,
+                                    "hold_days": 1,
+                                    "entry_price": p_val if p_val > 0 else 0,
+                                    "exit_price": p_val if p_val > 0 else 0,
+                                    "gain_pct": 0.0,
+                                    "status_exit": "SELESAI (DONE) ✅",
+                                    "note": "Keluar dari screener (Done)",
+                                    "ket": "Done",
+                                    "hit_dates": [row_date],
+                                    "hit_count": 1
+                                }
+                                data["awakened_history"].insert(0, new_done)
+                                added_to_done += 1
+                        else:
+                            # Saham aktif
+                            pair_key = (t, target_cat_clean)
+                            if pair_key in active_map:
+                                old_s = active_map[pair_key]
+                                if "hit_dates" not in old_s or not old_s["hit_dates"]:
+                                    old_s["hit_dates"] = [old_s.get("entry_date", row_date)]
+                                if row_date not in old_s["hit_dates"]:
+                                    old_s["hit_dates"].append(row_date)
+                                    old_s["hit_count"] = len(old_s["hit_dates"])
+                                    updated_hits += 1
+                                if ket_val:
+                                    old_s["ket"] = ket_val
+                                if p_val > 0 and old_s.get("entry_price", 0) <= 0:
+                                    old_s["entry_price"] = p_val
+                                    old_s["current_price"] = p_val
+                            else:
+                                if p_val <= 0:
+                                    live_p = fetch_latest_price(t)
+                                    p_val = live_p if live_p else 50
+                                new_act = {
+                                    "ticker": t,
+                                    "category": target_cat_clean,
+                                    "is_syariah": upload_default_syariah,
+                                    "entry_date": row_date,
+                                    "entry_price": int(p_val),
+                                    "current_price": int(p_val),
+                                    "sl": 0,
+                                    "tp1": 0,
+                                    "tp2": 0,
+                                    "tp3": 0,
+                                    "is_fca": (p_val <= 50),
+                                    "ket": ket_val,
+                                    "hit_dates": [row_date],
+                                    "hit_count": 1
+                                }
+                                data["active_stocks"].append(new_act)
+                                active_map[pair_key] = new_act
+                                added_to_active += 1
+
+                    save_data(data)
+                    st.success(f"🎉 **Impor Selesai!** Berhasil menambahkan **{added_to_active} saham** ke Watchlist Aktif, **{added_to_done} saham** ke Riwayat Trade Selesai (Done), dan memperbarui **{updated_hits} tanggal kemunculan** saham berulang.")
+                    st.rerun()
 
     # ----------------------------------------------------
     # TAB 1: QUICK IMPORT STOCKBIT (DUAL SCREENER: SYARIAH & NON-SYARIAH)
@@ -954,21 +1362,37 @@ if is_editor:
                         existing_active_pairs = {(s["ticker"], s.get("category", "Saham Tidur")): s for s in data["active_stocks"]}
                         new_added = []
                         skipped = []
+                        has_data_changed = False
 
                         for item in combined_candidates:
                             ticker = item["ticker"]
                             price = item["price"]
                             is_syariah = item["is_syariah"]
+                            b_date_str = str(batch_entry_date)
 
-                            # Proteksi Anti-Duplikasi per Kategori (First Entry Lock per Kategori)
+                            # Proteksi Anti-Duplikasi per Kategori & Perekaman Riwayat Hit
                             if (ticker, target_cat_clean) in existing_active_pairs:
                                 old = existing_active_pairs[(ticker, target_cat_clean)]
-                                skipped.append({
-                                    "Kode": ticker,
-                                    "Kategori": target_cat_clean,
-                                    "Status": "🛡️ DILEWATI (SUDAH ADA)",
-                                    "Keterangan": f"Sudah masuk di [{target_cat_clean}] sejak {old.get('entry_date')} @ Rp {old.get('entry_price')} (Data lama dipertahankan)"
-                                })
+                                if "hit_dates" not in old or not old["hit_dates"]:
+                                    old["hit_dates"] = [old.get("entry_date", b_date_str)]
+
+                                if b_date_str not in old["hit_dates"]:
+                                    old["hit_dates"].append(b_date_str)
+                                    old["hit_count"] = len(old["hit_dates"])
+                                    has_data_changed = True
+                                    skipped.append({
+                                        "Kode": ticker,
+                                        "Kategori": target_cat_clean,
+                                        "Status": f"🔄 TERDETEKSI KEMBALI (Hit ke-{old['hit_count']})",
+                                        "Keterangan": f"Muncul lagi pada {b_date_str}. Total deteksi: {old['hit_count']}x ({format_hit_dates(old['hit_dates'])}) — modal tetap Rp {old.get('entry_price')}"
+                                    })
+                                else:
+                                    skipped.append({
+                                        "Kode": ticker,
+                                        "Kategori": target_cat_clean,
+                                        "Status": "🛡️ DILEWATI (SUDAH ADA HARI INI)",
+                                        "Keterangan": f"Sudah masuk sejak {old.get('entry_date')} @ Rp {old.get('entry_price')} (Deteksi tgl {b_date_str} sudah tercatat)"
+                                    })
                             else:
                                 if price is None or price <= 0:
                                     live_p = fetch_latest_price(ticker)
@@ -979,16 +1403,19 @@ if is_editor:
                                     "ticker": ticker,
                                     "category": target_cat_clean,
                                     "is_syariah": is_syariah,
-                                    "entry_date": str(batch_entry_date),
+                                    "entry_date": b_date_str,
                                     "entry_price": int(price),
                                     "current_price": int(price),
                                     "sl": 0,
                                     "tp1": 0,
                                     "tp2": 0,
                                     "tp3": 0,
-                                    "is_fca": is_fca
+                                    "is_fca": is_fca,
+                                    "hit_dates": [b_date_str],
+                                    "hit_count": 1
                                 }
                                 data["active_stocks"].append(new_stock)
+                                has_data_changed = True
 
                                 # Cek apakah emiten ini juga aktif di kategori lain
                                 other_cats = [
@@ -1005,13 +1432,13 @@ if is_editor:
                                     "Kode": ticker,
                                     "Kategori": target_cat_clean,
                                     "Harga Masuk": f"Rp {price}",
-                                    "Tgl Masuk": str(batch_entry_date),
+                                    "Tgl Masuk": b_date_str,
                                     "Status Syariah": "🕌 Syariah (ISSI)" if is_syariah else "🏢 Non-Syariah",
                                     "Sumber": item["source"],
                                     "Status": status_add
                                 })
 
-                        if new_added:
+                        if has_data_changed:
                             save_data(data)
 
                         st.markdown("---")
@@ -1024,7 +1451,10 @@ if is_editor:
                             st.dataframe(pd.DataFrame(new_added), use_container_width=True, hide_index=True)
 
                         if skipped:
-                            st.warning(f"🛡️ **{len(skipped)} Saham Dilewati (Anti-Duplikasi)**: Saham ini sudah ada sebelumnya di watchlist sehingga tanggal masuk dan modal awal tetap aman terlindungi.")
+                            re_detected = [x for x in skipped if "TERDETEKSI KEMBALI" in x["Status"]]
+                            if re_detected:
+                                st.info(f"🔄 **{len(re_detected)} Saham Terdeteksi Kembali**: Tanggal screening baru berhasil ditambahkan ke riwayat kemunculan!")
+                            st.warning(f"🛡️ **{len(skipped)} Saham Sudah Ada Sebelumnya**: Data modal awal dan tanggal beli pertama tetap aman terlindungi.")
                             st.dataframe(pd.DataFrame(skipped), use_container_width=True, hide_index=True)
 
                         if st.button("🔄 Segarkan Tampilan Dashboard", type="secondary", key="btn_refresh_after_batch"):
@@ -1137,7 +1567,9 @@ if is_editor:
                         "exit_price": exit_price,
                         "gain_pct": round(calc_gain, 2),
                         "status_exit": "TARGET TP TERCAPAI 🎯" if (tp1_target > 0 and exit_price >= tp1_target) else "BUNGKUS MANUAL 💰",
-                        "note": final_exit_note
+                        "note": final_exit_note,
+                        "hit_dates": s_exit.get("hit_dates", [s_exit["entry_date"]]),
+                        "hit_count": s_exit.get("hit_count", len(s_exit.get("hit_dates", [s_exit["entry_date"]])))
                     }
                     data["awakened_history"].insert(0, new_hist)
 
@@ -1278,7 +1710,9 @@ if is_editor:
                         "loss_pct": round(calc_loss, 2),
                         "sl": sl_val,
                         "status_exit": "KENA SL 🛑" if (sl_val > 0 and exit_sl_price <= sl_val) else "CUT LOSS MANUAL ✂️",
-                        "note": final_sl_note
+                        "note": final_sl_note,
+                        "hit_dates": s_cut.get("hit_dates", [s_cut["entry_date"]]),
+                        "hit_count": s_cut.get("hit_count", len(s_cut.get("hit_dates", [s_cut["entry_date"]])))
                     }
                     data["failed_history"].insert(0, new_failed)
 
@@ -1315,6 +1749,7 @@ if is_editor:
                 new_tp1 = st.number_input("Target TP 1 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 1")
                 new_tp2 = st.number_input("Target TP 2 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 2")
                 new_tp3 = st.number_input("Target TP 3 (Rp) - Opsional:", min_value=0, value=0, step=1, help="Kosongkan atau isi 0 jika belum ada target TP 3")
+                new_ket_input = st.text_input("Keterangan Awal (Opsional):", placeholder="Contoh: Mulai gerak / Done / Siap akumulasi")
 
             submitted = st.form_submit_button("Simpan Saham ke Watchlist 🚀")
             if submitted:
@@ -1324,30 +1759,58 @@ if is_editor:
                 elif any(s["ticker"] == new_ticker and s.get("category", "Saham Tidur") == new_cat_clean for s in active_list):
                     st.error(f"Saham {new_ticker} sudah ada di kategori {new_cat_clean}!")
                 else:
-                    new_item = {
-                        "ticker": new_ticker,
-                        "category": new_cat_clean,
-                        "is_syariah": new_syariah,
-                        "entry_date": str(new_entry_date),
-                        "entry_price": int(new_entry_price),
-                        "current_price": int(new_entry_price),
-                        "sl": int(new_sl) if new_sl > 0 else 0,
-                        "tp1": int(new_tp1) if new_tp1 > 0 else 0,
-                        "tp2": int(new_tp2) if new_tp2 > 0 else 0,
-                        "tp3": int(new_tp3) if new_tp3 > 0 else 0,
-                        "is_fca": new_fca
-                    }
-                    data["active_stocks"].append(new_item)
-                    save_data(data)
-                    st.success(f"Saham {new_ticker} ({new_cat_clean}) berhasil ditambahkan!")
-                    st.rerun()
+                    clean_ket_init = new_ket_input.strip()
+                    if clean_ket_init.lower() == "done":
+                        # Jika diinput Done, langsung masukkan ke riwayat selesai
+                        new_done_hist = {
+                            "ticker": new_ticker,
+                            "category": new_cat_clean,
+                            "is_syariah": new_syariah,
+                            "entry_date": str(new_entry_date),
+                            "awakened_date": str(datetime.date.today()),
+                            "hold_days": calculate_working_days(str(new_entry_date)),
+                            "entry_price": int(new_entry_price),
+                            "exit_price": int(new_entry_price),
+                            "gain_pct": 0.0,
+                            "status_exit": "SELESAI (DONE) ✅",
+                            "note": "Selesai / Keluar dari Screener (Done)",
+                            "ket": "Done",
+                            "hit_dates": [str(new_entry_date)],
+                            "hit_count": 1
+                        }
+                        data["awakened_history"].insert(0, new_done_hist)
+                        save_data(data)
+                        st.success(f"Saham {new_ticker} langsung dimasukkan ke Riwayat Trade Selesai karena berstatus Done!")
+                        st.rerun()
+                    else:
+                        new_item = {
+                            "ticker": new_ticker,
+                            "category": new_cat_clean,
+                            "is_syariah": new_syariah,
+                            "entry_date": str(new_entry_date),
+                            "entry_price": int(new_entry_price),
+                            "current_price": int(new_entry_price),
+                            "sl": int(new_sl) if new_sl > 0 else 0,
+                            "tp1": int(new_tp1) if new_tp1 > 0 else 0,
+                            "tp2": int(new_tp2) if new_tp2 > 0 else 0,
+                            "tp3": int(new_tp3) if new_tp3 > 0 else 0,
+                            "is_fca": new_fca,
+                            "ket": clean_ket_init,
+                            "hit_dates": [str(new_entry_date)],
+                            "hit_count": 1
+                        }
+                        data["active_stocks"].append(new_item)
+                        save_data(data)
+                        st.success(f"Saham {new_ticker} ({new_cat_clean}) berhasil ditambahkan!")
+                        st.rerun()
 
     # ----------------------------------------------------
     # TAB 5: KELOLA WATCHLIST (CENTANG HAPUS / EDIT TABEL)
     # ----------------------------------------------------
     with tab_manage_active:
         st.markdown("##### ⚙️ Edit & Hapus Saham Watchlist")
-        st.caption("Centang kotak **Pilih Hapus** untuk menghapus saham, ubah kategori/angka langsung di tabel lalu klik **Simpan Perubahan**.")
+        st.caption("Centang kotak **Pilih Hapus** untuk menghapus saham, ubah kategori/keterangan/angka langsung di tabel lalu klik **Simpan Perubahan**.")
+        st.info("💡 **Tips Keterangan**: Ubah kolom Keterangan menjadi **Done** lalu klik Simpan untuk langsung memindahkan saham tersebut dari watchlist ke **Riwayat Trade Selesai**!")
         
         if active_list:
             manage_rows = []
@@ -1360,6 +1823,7 @@ if is_editor:
                     "Tgl Masuk": s["entry_date"],
                     "Harga Masuk": int(s["entry_price"]),
                     "Harga Sekarang": int(s["current_price"]),
+                    "Keterangan": s.get("ket", "") or "",
                     "SL": int(s.get("sl") or 0),
                     "TP 1": int(s.get("tp1") or 0),
                     "TP 2": int(s.get("tp2") or 0),
@@ -1384,6 +1848,7 @@ if is_editor:
                     "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", disabled=True),
                     "Harga Masuk": st.column_config.NumberColumn("Harga Masuk (Rp)", min_value=1, step=1, format="%d"),
                     "Harga Sekarang": st.column_config.NumberColumn("Harga Sekarang (Rp)", min_value=1, step=1, format="%d"),
+                    "Keterangan": st.column_config.TextColumn("Keterangan", help="Ketik bebas (cth: Mulai gerak) atau ketik 'Done' untuk memindahkan ke Riwayat Selesai"),
                     "SL": st.column_config.NumberColumn("Stop Loss / SL (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
                     "TP 1": st.column_config.NumberColumn("Target TP 1 (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
                     "TP 2": st.column_config.NumberColumn("Target TP 2 (Rp)", min_value=0, step=1, format="%d", help="0 jika tidak ada"),
@@ -1410,21 +1875,53 @@ if is_editor:
 
             with col_act2:
                 if st.button("💾 Simpan Perubahan Watchlist", type="primary", use_container_width=True):
+                    done_moved_count = 0
+                    active_keep = []
                     for _, r in edited_active_df.iterrows():
                         orig_idx = int(r["_id"])
                         if orig_idx < len(data["active_stocks"]):
                             s = data["active_stocks"][orig_idx]
-                            s["category"] = str(r["Kategori"])
-                            s["entry_price"] = int(r["Harga Masuk"])
-                            s["current_price"] = int(r["Harga Sekarang"])
-                            s["sl"] = int(r["SL"]) if (pd.notna(r["SL"]) and r["SL"] > 0) else 0
-                            s["tp1"] = int(r["TP 1"]) if (pd.notna(r["TP 1"]) and r["TP 1"] > 0) else 0
-                            s["tp2"] = int(r["TP 2"]) if (pd.notna(r["TP 2"]) and r["TP 2"] > 0) else 0
-                            s["tp3"] = int(r["TP 3"]) if (pd.notna(r["TP 3"]) and r["TP 3"] > 0) else 0
-                            s["is_syariah"] = bool(r["Syariah"])
-                            s["is_fca"] = bool(r["FCA"])
+                            ket_val = str(r["Keterangan"]).strip() if pd.notna(r["Keterangan"]) else ""
+                            
+                            # Cek apakah keterangan diubah menjadi Done
+                            if ket_val.lower() == "done":
+                                done_hist = {
+                                    "ticker": s["ticker"],
+                                    "category": str(r["Kategori"]),
+                                    "is_syariah": bool(r["Syariah"]),
+                                    "entry_date": s["entry_date"],
+                                    "awakened_date": str(datetime.date.today()),
+                                    "hold_days": calculate_working_days(s["entry_date"]),
+                                    "entry_price": int(r["Harga Masuk"]),
+                                    "exit_price": int(r["Harga Sekarang"]),
+                                    "gain_pct": round(((int(r["Harga Sekarang"]) - int(r["Harga Masuk"])) / int(r["Harga Masuk"]) * 100), 2) if int(r["Harga Masuk"]) > 0 else 0.0,
+                                    "status_exit": "SELESAI (DONE) ✅",
+                                    "note": "Keluar dari screener (Done)",
+                                    "ket": "Done",
+                                    "hit_dates": s.get("hit_dates", [s["entry_date"]]),
+                                    "hit_count": s.get("hit_count", len(s.get("hit_dates", [s["entry_date"]])))
+                                }
+                                data["awakened_history"].insert(0, done_hist)
+                                done_moved_count += 1
+                            else:
+                                s["category"] = str(r["Kategori"])
+                                s["entry_price"] = int(r["Harga Masuk"])
+                                s["current_price"] = int(r["Harga Sekarang"])
+                                s["ket"] = ket_val
+                                s["sl"] = int(r["SL"]) if (pd.notna(r["SL"]) and r["SL"] > 0) else 0
+                                s["tp1"] = int(r["TP 1"]) if (pd.notna(r["TP 1"]) and r["TP 1"] > 0) else 0
+                                s["tp2"] = int(r["TP 2"]) if (pd.notna(r["TP 2"]) and r["TP 2"] > 0) else 0
+                                s["tp3"] = int(r["TP 3"]) if (pd.notna(r["TP 3"]) and r["TP 3"] > 0) else 0
+                                s["is_syariah"] = bool(r["Syariah"])
+                                s["is_fca"] = bool(r["FCA"])
+                                active_keep.append(s)
+
+                    data["active_stocks"] = active_keep
                     save_data(data)
-                    st.success("Perubahan data watchlist berhasil disimpan!")
+                    msg = "Perubahan data watchlist berhasil disimpan!"
+                    if done_moved_count > 0:
+                        msg += f" ({done_moved_count} saham dipindahkan ke Riwayat Trade Selesai karena berstatus Done)"
+                    st.success(msg)
                     st.rerun()
         else:
             st.info("Watchlist kosong, belum ada saham untuk diedit/dihapus.")
@@ -1499,6 +1996,8 @@ if is_editor:
                         orig_idx = int(r["_id"])
                         orig_syariah = data["awakened_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["awakened_history"]) else True
                         orig_status = data["awakened_history"][orig_idx].get("status_exit", "BUNGKUS MANUAL 💰") if orig_idx < len(data["awakened_history"]) else "BUNGKUS MANUAL 💰"
+                        orig_hit_dates = data["awakened_history"][orig_idx].get("hit_dates", [tgl_masuk]) if orig_idx < len(data["awakened_history"]) else [tgl_masuk]
+                        orig_hit_count = data["awakened_history"][orig_idx].get("hit_count", len(orig_hit_dates)) if orig_idx < len(data["awakened_history"]) else len(orig_hit_dates)
                         
                         new_hist_list.append({
                             "ticker": str(r["Kode"]),
@@ -1511,7 +2010,9 @@ if is_editor:
                             "exit_price": exit_p,
                             "gain_pct": recalculated_gain,
                             "status_exit": orig_status,
-                            "note": str(r["Catatan"])
+                            "note": str(r["Catatan"]),
+                            "hit_dates": orig_hit_dates,
+                            "hit_count": orig_hit_count
                         })
                     data["awakened_history"] = new_hist_list
                     save_data(data)
@@ -1593,6 +2094,8 @@ if is_editor:
 
                         orig_idx = int(r["_id"])
                         orig_syariah = data["failed_history"][orig_idx].get("is_syariah", True) if orig_idx < len(data["failed_history"]) else True
+                        orig_hit_dates = data["failed_history"][orig_idx].get("hit_dates", [tgl_masuk]) if orig_idx < len(data["failed_history"]) else [tgl_masuk]
+                        orig_hit_count = data["failed_history"][orig_idx].get("hit_count", len(orig_hit_dates)) if orig_idx < len(data["failed_history"]) else len(orig_hit_dates)
 
                         new_failed_list.append({
                             "ticker": str(r["Kode"]),
@@ -1606,7 +2109,9 @@ if is_editor:
                             "loss_pct": recalculated_loss,
                             "sl": int(r["SL Terpasang"]),
                             "status_exit": str(r["Status Exit"]),
-                            "note": str(r["Catatan"])
+                            "note": str(r["Catatan"]),
+                            "hit_dates": orig_hit_dates,
+                            "hit_count": orig_hit_count
                         })
                     data["failed_history"] = new_failed_list
                     save_data(data)
@@ -1668,17 +2173,24 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             status_text = "BEP"
             trade_type = "BEP"
 
+        h_dates = h.get("hit_dates", [h.get("entry_date", "-")])
+        h_count = h.get("hit_count", len(h_dates))
+
         combined_closed.append({
             "type": trade_type,
             "ticker": h["ticker"],
             "category": h.get("category", "Saham Tidur"),
             "is_syariah": h.get("is_syariah", True),
             "entry_date": h.get("entry_date", "-"),
+            "hit_dates": h_dates,
+            "hit_count": h_count,
+            "hit_display": format_hit_display(h_count, h_dates),
             "exit_date": h.get("awakened_date", "-"),
             "hold_days": int(h.get("hold_days", 0)),
             "entry_price": int(h.get("entry_price", 0)),
             "exit_price": int(h.get("exit_price", 0)),
             "return_pct": gain_val,
+            "keterangan": h.get("ket", "") or ("Done" if "DONE" in str(h.get("status_exit", "")).upper() else "-"),
             "status_pl": status_text,
             "level_sl": "-",
             "note": h.get("note", "-")
@@ -1697,17 +2209,24 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             status_text = "BEP"
             trade_type = "BEP"
 
+        f_dates = f.get("hit_dates", [f.get("entry_date", "-")])
+        f_count = f.get("hit_count", len(f_dates))
+
         combined_closed.append({
             "type": trade_type,
             "ticker": f["ticker"],
             "category": f.get("category", "Saham Tidur"),
             "is_syariah": f.get("is_syariah", True),
             "entry_date": f.get("entry_date", "-"),
+            "hit_dates": f_dates,
+            "hit_count": f_count,
+            "hit_display": format_hit_display(f_count, f_dates),
             "exit_date": f.get("exit_date", "-"),
             "hold_days": int(f.get("hold_days", 0)),
             "entry_price": int(f.get("entry_price", 0)),
             "exit_price": int(f.get("exit_price", 0)),
             "return_pct": loss_val,
+            "keterangan": f.get("ket", "") or "-",
             "status_pl": status_text,
             "level_sl": f"Rp {sl_val}" if sl_val > 0 else "-",
             "note": f.get("note", "-")
@@ -1754,12 +2273,14 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "Kategori": c["category"],
             "Syariah": "✅" if c["is_syariah"] else "-",
             "Tgl Masuk": c["entry_date"],
+            "Kemunculan": c["hit_display"],
             "Tgl Selesai": c["exit_date"],
             "Hold": c["hold_days"],
             "Harga Masuk": c["entry_price"],
             "Harga Selesai": c["exit_price"],
             "Realisasi (%)": round(c["return_pct"], 2),
             "Level SL": c["level_sl"],
+            "Keterangan": c["keterangan"],
             "Status": c["status_pl"],
             "Catatan / Alasan Exit": c["note"]
         })
@@ -1775,12 +2296,14 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
                 "Kategori": st.column_config.TextColumn("Kategori Screener", width="medium"),
                 "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
                 "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
+                "Kemunculan": st.column_config.TextColumn("Kemunculan", width="medium", help="Jumlah kali dan tanggal kemunculan saham di screener"),
                 "Tgl Selesai": st.column_config.TextColumn("Tgl Selesai", width="small"),
                 "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
                 "Harga Masuk": st.column_config.NumberColumn("Modal", format="Rp %d", width="small"),
                 "Harga Selesai": st.column_config.NumberColumn("Harga Selesai", format="Rp %d", width="small"),
                 "Realisasi (%)": st.column_config.NumberColumn("Realisasi P/L", format="%+.2f%%", width="small"),
                 "Level SL": st.column_config.TextColumn("Level SL", width="small"),
+                "Keterangan": st.column_config.TextColumn("Keterangan", width="small", help="Keterangan pergerakan / status selesai (Done / Mulai gerak)"),
                 "Status": st.column_config.TextColumn("Status", width="small", help="Profit / Loss / BEP"),
                 "Catatan / Alasan Exit": st.column_config.TextColumn("Catatan / Alasan Exit", width="large"),
             }

@@ -51,7 +51,7 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
 
 ### 5. 🕌 Filter & Tampilan Single-View Saham Syariah (ISSI)
 * **Penanda Ringkas**: Ikon centang (**✅**) untuk saham Syariah (ISSI) dan tanda hubung (**-**) untuk Non-Syariah.
-* **Layout Satu Layar (Single-View)**: Seluruh data dari Kode, Modal, Target TP/SL, Status P/L, hingga Alert langsung terbaca rapi dalam satu tampilan layar tanpa perlu scroll horizontal.
+* **Layout Satu Layar (Single-View)**: Seluruh data dari Kode, Tgl Masuk, Kemunculan, Hold, Harga Sekarang, Floating Gain, Target TP/SL, Keterangan, hingga Status langsung terbaca rapi dalam satu tampilan layar tanpa perlu scroll horizontal.
 
 ### 6. 📥 Export ke File CSV
 * Tombol export instan untuk setiap tab screener (**Flow Masuk**, **Flow Masuk + Fundamental OK**, **Saham Tidur**) maupun riwayat trade selesai.

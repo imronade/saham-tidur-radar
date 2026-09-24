@@ -51,7 +51,8 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
 
 ### 5. 🕌 Filter & Tampilan Single-View Saham Syariah (ISSI)
 * **Penanda Ringkas**: Ikon centang (**✅**) untuk saham Syariah (ISSI) dan tanda hubung (**-**) untuk Non-Syariah.
-* **Layout Satu Layar (Single-View)**: Seluruh data dari Kode, Tgl Masuk, Kemunculan, Hold, Harga Sekarang, Floating Gain, Target TP/SL, Keterangan, hingga Status langsung terbaca rapi dalam satu tampilan layar tanpa perlu scroll horizontal.
+* **Layout Satu Layar (Single-View)**: Seluruh data dari Kode, Syariah, Tgl Masuk, Frekuensi Muncul (Icon), Hold, Harga Awal, Harga Terkini, Floating Gain, Target TP/SL, Keterangan, hingga Status langsung terbaca rapi dalam satu tampilan layar tanpa perlu scroll horizontal.
+* **Format Angka Rupiah Bersih**: Seluruh kolom harga (`Harga Awal`, `Harga Terkini`, dan `Harga Masuk Screener` / `Harga Selesai`) ditampilkan bersih tanpa embel-embel "Rp." dan dengan tanda titik sebagai pemisah ribuan (misal `50`, `1.000`, `10.000`).
 
 ### 6. 📥 Export ke File CSV
 * Tombol export instan untuk setiap tab screener (**Flow Masuk**, **Flow Masuk + Fundamental OK**, **Saham Tidur**) maupun riwayat trade selesai.
@@ -87,13 +88,14 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
 * Di sidebar saat login Editor, tersedia fitur **Reset Seluruh Data Tabel** dengan konfirmasi pengamanan.
 * Menghapus dan mengosongkan seluruh isi database (Watchlist Aktif, Histori Cuan, dan Histori Cut Loss) secara instan saat Anda ingin memulai musim screening baru atau setelah mengosongkan data lama.
 
-### 11. 🔍 Pelacakan Frekuensi & Tanggal Kemunculan Screener (Hit Tracker)
+### 11. 🔍 Pelacakan & Filter Frekuensi Muncul Screener (Hit Tracker)
 * **Pencatatan Otomatis Kemunculan Berulang**: Saat melakukan import harian, jika emiten yang sudah ada di watchlist terdeteksi kembali pada tanggal baru, sistem secara otomatis mencatat tanggal kemunculan (`hit_dates`) dan meningkatkan hitungan kemunculan (`hit_count`).
-* **Kolom Kemunculan di Seluruh Tabel**: Ditampilkan dengan format ringkas tanggal (`DD/MM`) seperti `1x (01/09)`, `⚡ 2x (01/09, 03/09)`, `🔥 3x (01/09, 03/09, 08/09)`.
+* **Kolom Frekuensi Muncul Berbasis Icon Ringkas**: Ditampilkan dengan icon ringkas (`🌱` = Muncul 1x / Baru, `⚡` = Muncul 2x, `🔥` = Muncul ≥ 3x / Sering) dengan keterangan legend di atas tabel.
+* **Dropdown Filter Frekuensi**: Tersedia filter frekuensi di setiap tab hasil screener dan riwayat trade selesai (`Semua Frekuensi`, `Baru 1x (🌱 1x)`, `Berulang (≥ 2x)`, `Tepat 2x (⚡ 2x)`, `Sering (🔥 ≥ 3x)`).
 
 ### 12. 📜 Riwayat Trade Selesai (Satu Tabel Terpadu)
 * Menggabungkan riwayat take profit, cut loss, dan saham berstatus `Done` ke dalam **satu tabel tunggal** yang ringkas dan rapi.
-* Filter interaktif lengkap untuk menyaring status hasil, kategori, syariah, pencarian emiten, dan rentang tanggal keluar/selesai.
+* Filter interaktif lengkap untuk menyaring status hasil, kategori, frekuensi muncul, syariah, pencarian emiten, dan rentang tanggal keluar/selesai.
 
 ### 13. 💾 Backup & Restore Database JSON (Perlindungan Data Anti-Hilang)
 * **1-Click Backup**: Di sidebar saat login Editor, tersedia tombol **📥 Download stocks_data.json** untuk mengunduh seluruh database ke laptop Anda kapan saja.

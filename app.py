@@ -538,6 +538,30 @@ def format_hit_dates(hit_dates):
             formatted.append(str(d))
     return ", ".join(formatted)
 
+def format_hit_icon(hit_count):
+    """Mengembalikan icon ringkas frekuensi kemunculan screener (🌱 1x, ⚡ 2x, 🔥 ≥ 3x)."""
+    if not hit_count or hit_count <= 1:
+        return "🌱"
+    elif hit_count == 2:
+        return "⚡"
+    else:
+        return "🔥"
+
+def format_id_number(val):
+    """
+    Format angka tanpa 'Rp.' dengan titik sebagai pemisah ribuan.
+    Contoh: 1000 -> 1.000, 10000 -> 10.000, 50 -> 50.
+    """
+    if val is None or val == "" or val == "-":
+        return "-"
+    try:
+        val_int = int(round(float(val)))
+        if val_int == 0:
+            return "0"
+        return f"{val_int:,}".replace(",", ".")
+    except:
+        return str(val)
+
 def format_hit_display(hit_count, hit_dates):
     dates_str = format_hit_dates(hit_dates)
     if hit_count >= 3:
@@ -880,12 +904,19 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
                 st.rerun()
 
     # Filter Bar
-    f_pl, f_sya, f_date, f_search = st.columns([1.8, 1.5, 1.8, 1.5])
+    f_pl, f_freq, f_sya, f_date, f_search = st.columns([1.5, 1.6, 1.3, 1.5, 1.3])
     with f_pl:
         filter_pl = st.selectbox(
             "📊 Filter Status:",
             ["Semua Status", "📈 Hanya Profit", "🔻 Hanya Loss", "⚖️ Hanya BEP"],
             key=f"filter_pl_{tab_key}"
+        )
+    with f_freq:
+        filter_freq = st.selectbox(
+            "🔄 Frekuensi:",
+            ["Semua Frekuensi", "Baru 1x (🌱 1x)", "Berulang (≥ 2x)", "Tepat 2x (⚡ 2x)", "Sering (🔥 ≥ 3x)"],
+            key=f"filter_freq_{tab_key}",
+            help="Filter berdasarkan berapa kali saham muncul di screener."
         )
     with f_sya:
         filter_syariah = st.selectbox(
@@ -921,6 +952,17 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         if filter_pl == "⚖️ Hanya BEP" and curr != entry:
             continue
 
+        # Filter Frekuensi Muncul
+        s_count = s.get("hit_count", 1)
+        if "1x" in filter_freq and filter_freq.startswith("Baru") and s_count != 1:
+            continue
+        if filter_freq == "Berulang (≥ 2x)" and s_count < 2:
+            continue
+        if filter_freq == "Tepat 2x (⚡ 2x)" and s_count != 2:
+            continue
+        if filter_freq == "Sering (🔥 ≥ 3x)" and s_count < 3:
+            continue
+
         # Filter Syariah
         if filter_syariah == "Hanya Syariah (ISSI)" and not s.get("is_syariah", False):
             continue
@@ -954,10 +996,10 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         tp2_val = s.get("tp2") or 0
         tp3_val = s.get("tp3") or 0
 
-        sl_str = f"Rp {sl_val} ({((sl_val - entry) / entry * 100):.0f}%)" if sl_val > 0 else "-"
-        tp1_str = f"Rp {tp1_val} (+{((tp1_val - entry) / entry * 100):.0f}%)" if tp1_val > 0 else "-"
-        tp2_str = f"Rp {tp2_val} (+{((tp2_val - entry) / entry * 100):.0f}%)" if tp2_val > 0 else "-"
-        tp3_str = f"Rp {tp3_val} (+{((tp3_val - entry) / entry * 100):.0f}%)" if tp3_val > 0 else "-"
+        sl_str = f"{format_id_number(sl_val)} ({((sl_val - entry) / entry * 100):.0f}%)" if sl_val > 0 else "-"
+        tp1_str = f"{format_id_number(tp1_val)} (+{((tp1_val - entry) / entry * 100):.0f}%)" if tp1_val > 0 else "-"
+        tp2_str = f"{format_id_number(tp2_val)} (+{((tp2_val - entry) / entry * 100):.0f}%)" if tp2_val > 0 else "-"
+        tp3_str = f"{format_id_number(tp3_val)} (+{((tp3_val - entry) / entry * 100):.0f}%)" if tp3_val > 0 else "-"
         hold_work_days = calculate_working_days(s.get("entry_date"))
 
         # Status
@@ -985,9 +1027,10 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
             "Kode": kode_display,
             "Syariah": "✅" if s.get("is_syariah") else "-",
             "Tgl Masuk": s.get("entry_date", "-"),
-            "Kemunculan": format_hit_display(s.get("hit_count", 1), s.get("hit_dates", [s.get("entry_date")])),
+            "Frekuensi Muncul": format_hit_icon(s.get("hit_count", 1)),
             "Hold": hold_work_days,
-            "Harga Sekarang": curr,
+            "Harga Awal": format_id_number(entry),
+            "Harga Terkini": format_id_number(curr),
             "Floating Gain (%)": round(gain_pct, 2),
             "SL": sl_str,
             "TP 1": tp1_str,
@@ -999,6 +1042,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
 
     df_tab = pd.DataFrame(display_rows)
     if not df_tab.empty:
+        st.caption("ℹ️ **Keterangan Frekuensi**: 🌱 = Muncul 1x (Baru) &nbsp;|&nbsp; ⚡ = Muncul 2x &nbsp;|&nbsp; 🔥 = Muncul ≥ 3x (Sering)")
         st.dataframe(
             df_tab,
             use_container_width=True,
@@ -1007,9 +1051,10 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
                 "Kode": st.column_config.TextColumn("Kode", width="medium", help="Kode emiten saham & penanda irisan multi-screener"),
                 "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
                 "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
-                "Kemunculan": st.column_config.TextColumn("Kemunculan", width="medium", help="Frekuensi dan riwayat tanggal kemunculan screener"),
+                "Frekuensi Muncul": st.column_config.TextColumn("Frekuensi Muncul", width="small", alignment="center", help="Frekuensi kemunculan: 🌱 = 1x (Baru), ⚡ = 2x, 🔥 = ≥ 3x (Sering)"),
                 "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small", help="Lama simpan hari kerja bursa (Senin-Jumat)"),
-                "Harga Sekarang": st.column_config.NumberColumn("Harga", format="Rp %d", width="small"),
+                "Harga Awal": st.column_config.TextColumn("Harga Awal", width="small", alignment="right", help="Harga saat saham pertama kali masuk screener"),
+                "Harga Terkini": st.column_config.TextColumn("Harga Terkini", width="small", alignment="right", help="Harga saham penutupan / update terkini"),
                 "Floating Gain (%)": st.column_config.NumberColumn("Floating Gain", format="%+.2f%%", width="small"),
                 "SL": st.column_config.TextColumn("SL", width="small", help="Level Stop Loss (Batas Risiko)"),
                 "TP 1": st.column_config.TextColumn("TP 1", width="small", help="Target Take Profit 1"),
@@ -1025,7 +1070,7 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
         clean_tickers = [s["ticker"] for s in filtered]
         if len(clean_tickers) == len(df_export):
             df_export["Kode"] = clean_tickers
-        df_export["Kemunculan"] = [f"{s.get('hit_count', 1)}x ({', '.join(s.get('hit_dates', [s.get('entry_date', '-')]))})" for s in filtered]
+        df_export["Frekuensi Muncul"] = [f"{s.get('hit_count', 1)}x ({', '.join(s.get('hit_dates', [s.get('entry_date', '-')]))})" for s in filtered]
         df_export["Hold"] = df_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
         csv_tab = df_export.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
@@ -2126,7 +2171,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
     st.caption("Riwayat seluruh emiten yang telah selesai ditradingkan (Realisasi Profit & Cut Loss)")
 
     # Filter bar
-    hf_col1, hf_col2, hf_col3, hf_col4, hf_col5 = st.columns([1.6, 1.5, 1.4, 1.4, 1.5])
+    hf_col1, hf_col2, hf_col3, hf_col4, hf_col5, hf_col6 = st.columns([1.4, 1.4, 1.4, 1.2, 1.3, 1.4])
     with hf_col1:
         filter_closed_status = st.selectbox(
             "📊 Status Hasil:",
@@ -2140,16 +2185,23 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             key="filter_closed_kat"
         )
     with hf_col3:
+        filter_closed_freq = st.selectbox(
+            "🔄 Frekuensi:",
+            ["Semua Frekuensi", "Baru 1x (🌱 1x)", "Berulang (≥ 2x)", "Tepat 2x (⚡ 2x)", "Sering (🔥 ≥ 3x)"],
+            key="filter_closed_freq",
+            help="Filter berdasarkan berapa kali saham muncul di screener."
+        )
+    with hf_col4:
         filter_closed_syariah = st.selectbox(
             "🕌 Syariah:",
             ["Semua Histori", "Hanya Syariah (ISSI)", "Hanya Non-Syariah"],
             key="filter_closed_syariah"
         )
-    with hf_col4:
+    with hf_col5:
         filter_closed_search = st.text_input(
             "🔍 Cari Kode:", placeholder="misal: MSKY", key="filter_closed_search"
         )
-    with hf_col5:
+    with hf_col6:
         filter_closed_date = st.date_input(
             "📅 Filter Tgl Selesai:",
             value=(),
@@ -2226,7 +2278,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "return_pct": loss_val,
             "keterangan": f.get("ket", "") or "-",
             "status_pl": status_text,
-            "level_sl": f"Rp {sl_val}" if sl_val > 0 else "-",
+            "level_sl": format_id_number(sl_val) if sl_val > 0 else "-",
             "note": f.get("note", "-")
         })
 
@@ -2243,6 +2295,17 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
 
         # Filter Kategori
         if filter_closed_kat != "Semua Kategori" and c["category"] != filter_closed_kat:
+            continue
+
+        # Filter Frekuensi Muncul
+        c_count = c.get("hit_count", 1)
+        if "1x" in filter_closed_freq and filter_closed_freq.startswith("Baru") and c_count != 1:
+            continue
+        if filter_closed_freq == "Berulang (≥ 2x)" and c_count < 2:
+            continue
+        if filter_closed_freq == "Tepat 2x (⚡ 2x)" and c_count != 2:
+            continue
+        if filter_closed_freq == "Sering (🔥 ≥ 3x)" and c_count < 3:
             continue
 
         # Filter Syariah
@@ -2271,11 +2334,11 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
             "Kategori": c["category"],
             "Syariah": "✅" if c["is_syariah"] else "-",
             "Tgl Masuk": c["entry_date"],
-            "Kemunculan": c["hit_display"],
+            "Frekuensi Muncul": format_hit_icon(c["hit_count"]),
             "Tgl Selesai": c["exit_date"],
             "Hold": c["hold_days"],
-            "Harga Masuk Screener": c["entry_price"],
-            "Harga Selesai": c["exit_price"],
+            "Harga Masuk Screener": format_id_number(c["entry_price"]),
+            "Harga Selesai": format_id_number(c["exit_price"]),
             "Realisasi (%)": round(c["return_pct"], 2),
             "Level SL": c["level_sl"],
             "Keterangan": c["keterangan"],
@@ -2285,6 +2348,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
 
     df_closed = pd.DataFrame(display_closed)
     if not df_closed.empty:
+        st.caption("ℹ️ **Keterangan Frekuensi**: 🌱 = Muncul 1x (Baru) &nbsp;|&nbsp; ⚡ = Muncul 2x &nbsp;|&nbsp; 🔥 = Muncul ≥ 3x (Sering)")
         st.dataframe(
             df_closed,
             use_container_width=True,
@@ -2294,11 +2358,11 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
                 "Kategori": st.column_config.TextColumn("Kategori Screener", width="medium"),
                 "Syariah": st.column_config.TextColumn("Syariah", width="small", help="✅ = Syariah (ISSI), - = Non-Syariah"),
                 "Tgl Masuk": st.column_config.TextColumn("Tgl Masuk", width="small"),
-                "Kemunculan": st.column_config.TextColumn("Kemunculan", width="medium", help="Jumlah kali dan tanggal kemunculan saham di screener"),
+                "Frekuensi Muncul": st.column_config.TextColumn("Frekuensi Muncul", width="small", alignment="center", help="Frekuensi kemunculan: 🌱 = 1x (Baru), ⚡ = 2x, 🔥 = ≥ 3x (Sering)"),
                 "Tgl Selesai": st.column_config.TextColumn("Tgl Selesai", width="small"),
                 "Hold": st.column_config.NumberColumn("Hold", format="%d hari", width="small"),
-                "Harga Masuk Screener": st.column_config.NumberColumn("Harga Masuk Screener", format="Rp %d", width="medium", help="Harga saham saat pertama kali masuk di screener"),
-                "Harga Selesai": st.column_config.NumberColumn("Harga Selesai", format="Rp %d", width="small"),
+                "Harga Masuk Screener": st.column_config.TextColumn("Harga Masuk Screener", width="medium", alignment="right", help="Harga saham saat pertama kali masuk di screener"),
+                "Harga Selesai": st.column_config.TextColumn("Harga Selesai", width="small", alignment="right", help="Harga saham saat posisi ditutup"),
                 "Realisasi (%)": st.column_config.NumberColumn("Realisasi P/L", format="%+.2f%%", width="small"),
                 "Level SL": st.column_config.TextColumn("Level SL", width="small"),
                 "Keterangan": st.column_config.TextColumn("Keterangan", width="small", help="Keterangan pergerakan / status selesai (Done / Mulai gerak)"),
@@ -2308,6 +2372,7 @@ with st.expander("📜 Riwayat Trade Selesai (Histori Cuan & Cut Loss)", expande
         )
 
         df_closed_export = df_closed.copy()
+        df_closed_export["Frekuensi Muncul"] = [f"{c['hit_count']}x ({', '.join(c['hit_dates'])})" for c in filtered_closed]
         df_closed_export["Hold"] = df_closed_export["Hold"].apply(lambda x: f"{x} Hari Kerja")
         csv_closed = df_closed_export.to_csv(index=False).encode('utf-8-sig')
         st.download_button(

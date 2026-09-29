@@ -11,72 +11,2773 @@
       "tp2": 0,
       "tp3": 0,
       "is_fca": true,
-      "category": "Saham Tidur"
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-10"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-10": {
+          "price": 50,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
     },
     {
       "ticker": "ROTI",
       "is_syariah": true,
       "entry_date": "2026-09-10",
       "entry_price": 585,
-      "current_price": 585,
-      "sl": 0,
-      "tp1": 0,
-      "tp2": 0,
-      "tp3": 0,
-      "is_fca": false,
-      "category": "Saham Tidur"
-    },
-    {
-      "ticker": "GULA",
-      "is_syariah": true,
-      "entry_date": "2026-09-10",
-      "entry_price": 810,
-      "current_price": 845,
-      "sl": 0,
-      "tp1": 0,
-      "tp2": 0,
-      "tp3": 0,
-      "is_fca": false,
-      "category": "Saham Tidur"
-    },
-    {
-      "ticker": "GWSA",
-      "is_syariah": true,
-      "entry_date": "2026-09-09",
-      "entry_price": 173,
-      "current_price": 167,
-      "sl": 0,
-      "tp1": 0,
-      "tp2": 0,
-      "tp3": 0,
-      "is_fca": false,
-      "category": "Saham Tidur"
-    },
-    {
-      "ticker": "ATAP",
-      "is_syariah": true,
-      "entry_date": "2026-09-09",
-      "entry_price": 560,
       "current_price": 565,
       "sl": 0,
       "tp1": 0,
       "tp2": 0,
       "tp3": 0,
       "is_fca": false,
-      "category": "Saham Tidur"
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-10"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-10": {
+          "price": 585,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GULA",
+      "is_syariah": true,
+      "entry_date": "2026-09-10",
+      "entry_price": 810,
+      "current_price": 780,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-10"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-10": {
+          "price": 810,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GWSA",
+      "is_syariah": true,
+      "entry_date": "2026-09-09",
+      "entry_price": 173,
+      "current_price": 145,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-09"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-09": {
+          "price": 173,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ATAP",
+      "is_syariah": true,
+      "entry_date": "2026-09-09",
+      "entry_price": 560,
+      "current_price": 540,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-09"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-09": {
+          "price": 560,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
     },
     {
       "ticker": "ALII",
       "is_syariah": false,
       "entry_date": "2026-09-11",
       "entry_price": 795,
-      "current_price": 795,
+      "current_price": 695,
       "sl": 0,
       "tp1": 0,
       "tp2": 0,
       "tp3": 0,
       "is_fca": false,
-      "category": "Saham Tidur"
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-11"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-11": {
+          "price": 795,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SAMF",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 332,
+      "current_price": 306,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 332,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "AADI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 12225,
+      "current_price": 11050,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17"
+      ],
+      "hit_count": 4,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 12225,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-15": {
+          "price": 12275,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-16": {
+          "price": 12400,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-17": {
+          "price": 12375,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "UNTR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 26300,
+      "current_price": 25175,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-14"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 26300,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-14": {
+          "price": 26400,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GULA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 845,
+      "current_price": 780,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-24"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 845,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-24": {
+          "price": 830,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "AALI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 8600,
+      "current_price": 7800,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "CALON HNS. AMATI 7675",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-25",
+        "2026-09-28"
+      ],
+      "hit_count": 3,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 8600,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-25": {
+          "price": 7850,
+          "category": "Flow Masuk",
+          "ket": "CALON HNS. AMATI 7675"
+        },
+        "2026-09-28": {
+          "price": 7825,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "LSIP",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 1700,
+      "current_price": 1505,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-17",
+        "2026-09-22",
+        "2026-09-29"
+      ],
+      "hit_count": 4,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 1700,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-17": {
+          "price": 1735,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 1580,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 1505,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MSJA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 825,
+      "current_price": 830,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 825,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "OMED",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 214,
+      "current_price": 218,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-18"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 214,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-18": {
+          "price": 216,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "PKPK",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 4450,
+      "current_price": 6150,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 4450,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SMDR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 392,
+      "current_price": 392,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-17",
+        "2026-09-24",
+        "2026-09-29"
+      ],
+      "hit_count": 4,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 392,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-17": {
+          "price": 398,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-24": {
+          "price": 402,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 392,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "HEAL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 675,
+      "current_price": 615,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 675,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "KBLI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-13",
+      "entry_price": 340,
+      "current_price": 340,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-13",
+        "2026-09-28"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-13": {
+          "price": 340,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 348,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "POWR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 1020,
+      "current_price": 920,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 1020,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "CTRA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 615,
+      "current_price": 540,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 615,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GZCO",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 191,
+      "current_price": 166,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 191,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SHID",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 800,
+      "current_price": 695,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 800,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ARCI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 1310,
+      "current_price": 1225,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14",
+        "2026-09-15",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-23"
+      ],
+      "hit_count": 5,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 1310,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-15": {
+          "price": 1335,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-17": {
+          "price": 1340,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-18": {
+          "price": 1380,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 1350,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "BRMS",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 2301,
+      "current_price": 595,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14",
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-21",
+        "2026-09-22"
+      ],
+      "hit_count": 5,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 2301,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-15": {
+          "price": 735,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-16": {
+          "price": 730,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 690,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 665,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "FOLK",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 296,
+      "current_price": 190,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 296,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "PGAS",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 1550,
+      "current_price": 1435,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14",
+        "2026-09-29"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 1550,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 1435,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "PPRE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 105,
+      "current_price": 93,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14",
+        "2026-09-28"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 105,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 86,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "VKTR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-14",
+      "entry_price": 765,
+      "current_price": 830,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-14",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-28",
+        "2026-09-29"
+      ],
+      "hit_count": 8,
+      "hit_details": {
+        "2026-09-14": {
+          "price": 765,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-17": {
+          "price": 770,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-18": {
+          "price": 785,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 780,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 770,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 835,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 770,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 830,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GRIA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-15",
+      "entry_price": 168,
+      "current_price": 151,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-15"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-15": {
+          "price": 168,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "JECC",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-15",
+      "entry_price": 985,
+      "current_price": 685,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-15"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-15": {
+          "price": 985,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "POLI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-15",
+      "entry_price": 845,
+      "current_price": 830,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-15"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-15": {
+          "price": 845,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MDLA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-15",
+      "entry_price": 206,
+      "current_price": 204,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-15",
+        "2026-09-21",
+        "2026-09-29"
+      ],
+      "hit_count": 3,
+      "hit_details": {
+        "2026-09-15": {
+          "price": 206,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 208,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 204,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SWID",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-16",
+      "entry_price": 124,
+      "current_price": 95,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-16"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-16": {
+          "price": 124,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "BRNA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-16",
+      "entry_price": 660,
+      "current_price": 630,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-16"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-16": {
+          "price": 660,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "CAMP",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-16",
+      "entry_price": 170,
+      "current_price": 154,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-16"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-16": {
+          "price": 170,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "FISH",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-16",
+      "entry_price": 700,
+      "current_price": 615,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-16"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-16": {
+          "price": 700,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "KETR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-16",
+      "entry_price": 925,
+      "current_price": 990,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-16"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-16": {
+          "price": 925,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "CCSI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-17",
+      "entry_price": 434,
+      "current_price": 302,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-17",
+        "2026-09-18"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-17": {
+          "price": 434,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-18": {
+          "price": 422,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "DSSA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-17",
+      "entry_price": 1120,
+      "current_price": 1090,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-17",
+        "2026-09-23",
+        "2026-09-29"
+      ],
+      "hit_count": 3,
+      "hit_details": {
+        "2026-09-17": {
+          "price": 1120,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 1070,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 1090,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "JGLE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-17",
+      "entry_price": 73,
+      "current_price": 50,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-17",
+        "2026-09-22"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-17": {
+          "price": 73,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 66,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "NIKL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-17",
+      "entry_price": 222,
+      "current_price": 186,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-17"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-17": {
+          "price": 222,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "RISE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-17",
+      "entry_price": 845,
+      "current_price": 605,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-17"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-17": {
+          "price": 845,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "NICE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 362,
+      "current_price": 334,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-21"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 362,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 368,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ANTM",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 3340,
+      "current_price": 3160,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 3340,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MDKA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 2900,
+      "current_price": 2920,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-23"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 2900,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 3080,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "LABS",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 173,
+      "current_price": 146,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-21"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 173,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 169,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MAPI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 1500,
+      "current_price": 1550,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-28"
+      ],
+      "hit_count": 4,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 1500,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-21": {
+          "price": 1495,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 1495,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 1550,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ADMR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 1590,
+      "current_price": 1490,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 1590,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MAPA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 690,
+      "current_price": 650,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 690,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "JELI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 500,
+      "current_price": 414,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 500,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "EPMT",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 2650,
+      "current_price": 2630,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-22",
+        "2026-09-28"
+      ],
+      "hit_count": 3,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 2650,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-22": {
+          "price": 2640,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 2640,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SRTG",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 1845,
+      "current_price": 1795,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 1845,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "UNVR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 1650,
+      "current_price": 1635,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18",
+        "2026-09-28",
+        "2026-09-29"
+      ],
+      "hit_count": 3,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 1650,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 1635,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 1635,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "AUTO",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-18",
+      "entry_price": 3360,
+      "current_price": 3300,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-18"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-18": {
+          "price": 3360,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MLIA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 216,
+      "current_price": 222,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 216,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MARK",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 1130,
+      "current_price": 1190,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21",
+        "2026-09-24"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 1130,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-24": {
+          "price": 1180,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "INKP",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 8575,
+      "current_price": 8075,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 8575,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ISAT",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 2310,
+      "current_price": 2300,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 2310,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ERAA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 625,
+      "current_price": 595,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 625,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "IKBI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 535,
+      "current_price": 540,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21",
+        "2026-09-28"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 535,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-28": {
+          "price": 540,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SMIL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 222,
+      "current_price": 440,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 222,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "TPIA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-21",
+      "entry_price": 1880,
+      "current_price": 1720,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-21"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-21": {
+          "price": 1880,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "IPOL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 116,
+      "current_price": 111,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-22",
+        "2026-09-23"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 116,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 120,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "HOPE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 262,
+      "current_price": 270,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-22"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 1185,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "LPPF",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 1580,
+      "current_price": 1575,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "SYMMETRICAL TRIANGLE, AMATI A590",
+      "hit_dates": [
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-28"
+      ],
+      "hit_count": 5,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 1580,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-23": {
+          "price": 1560,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-24": {
+          "price": 1580,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-25": {
+          "price": 1585,
+          "category": "Flow Masuk",
+          "ket": "SYMMETRICAL TRIANGLE, AMATI A590"
+        },
+        "2026-09-28": {
+          "price": 1575,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MTEL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 492,
+      "current_price": 460,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-22"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 492,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "CHEK",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 132,
+      "current_price": 123,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-22"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 132,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "RMKE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-22",
+      "entry_price": 410,
+      "current_price": 364,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-22"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-22": {
+          "price": 410,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "BELL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-23",
+      "entry_price": 109,
+      "current_price": 93,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-23",
+        "2026-09-29"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-23": {
+          "price": 109,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 93,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "BSSR",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-23",
+      "entry_price": 5500,
+      "current_price": 5425,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-23"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-23": {
+          "price": 5500,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "WIRG",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-23",
+      "entry_price": 70,
+      "current_price": 58,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-23",
+        "2026-09-29"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-23": {
+          "price": 70,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 58,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ROTI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-24",
+      "entry_price": 580,
+      "current_price": 565,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-24"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-24": {
+          "price": 580,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "FPNI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-24",
+      "entry_price": 525,
+      "current_price": 492,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-24"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-24": {
+          "price": 525,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SMMT",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-24",
+      "entry_price": 3170,
+      "current_price": 3490,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-24"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-24": {
+          "price": 3170,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "PSKT",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-24",
+      "entry_price": 250,
+      "current_price": 232,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-24",
+        "2026-09-25"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-24": {
+          "price": 250,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-25": {
+          "price": 248,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "TEBE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-24",
+      "entry_price": 2370,
+      "current_price": 2340,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-24"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-24": {
+          "price": 2370,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "VICI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-25",
+      "entry_price": 965,
+      "current_price": 950,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-25"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-25": {
+          "price": 965,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "TLDN",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-25",
+      "entry_price": 585,
+      "current_price": 595,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-25"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-25": {
+          "price": 585,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "HRUM",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-25",
+      "entry_price": 875,
+      "current_price": 870,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "TUNGGU PANTULAN DARI DAERAH 850",
+      "hit_dates": [
+        "2026-09-25"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-25": {
+          "price": 875,
+          "category": "Flow Masuk",
+          "ket": "TUNGGU PANTULAN DARI DAERAH 850"
+        }
+      }
+    },
+    {
+      "ticker": "PTBA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-25",
+      "entry_price": 3090,
+      "current_price": 3110,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "DOUBLE BOTTOM. AMATI 3170",
+      "hit_dates": [
+        "2026-09-25"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-25": {
+          "price": 3090,
+          "category": "Flow Masuk",
+          "ket": "DOUBLE BOTTOM. AMATI 3170"
+        }
+      }
+    },
+    {
+      "ticker": "ASLC",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-28",
+      "entry_price": 57,
+      "current_price": 58,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-28"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-28": {
+          "price": 57,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MBAP",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-28",
+      "entry_price": 1680,
+      "current_price": 1715,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-28",
+        "2026-09-29"
+      ],
+      "hit_count": 2,
+      "hit_details": {
+        "2026-09-28": {
+          "price": 1680,
+          "category": "Flow Masuk",
+          "ket": ""
+        },
+        "2026-09-29": {
+          "price": 1715,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MINE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-28",
+      "entry_price": 264,
+      "current_price": 274,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-28"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-28": {
+          "price": 264,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "MSIN",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-28",
+      "entry_price": 176,
+      "current_price": 206,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-28"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-28": {
+          "price": 176,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "RAJA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-28",
+      "entry_price": 655,
+      "current_price": 655,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-28"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-28": {
+          "price": 655,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "UCID",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 486,
+      "current_price": 486,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 486,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "SCCO",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 2590,
+      "current_price": 2590,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 2590,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "PTSN",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 390,
+      "current_price": 390,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 390,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "IPTV",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 25,
+      "current_price": 25,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": true,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 25,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "ROCK",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 2160,
+      "current_price": 2160,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 2160,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "TCPI",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 1725,
+      "current_price": 1725,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 1725,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "EKAD",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 386,
+      "current_price": 386,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 386,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "TOTL",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 1535,
+      "current_price": 1535,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 1535,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "BLUE",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 2960,
+      "current_price": 2960,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 2960,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "GIAA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 57,
+      "current_price": 57,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 57,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "WBSA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 620,
+      "current_price": 620,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 620,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
+    },
+    {
+      "ticker": "STAA",
+      "category": "Flow Masuk",
+      "is_syariah": true,
+      "entry_date": "2026-09-29",
+      "entry_price": 1205,
+      "current_price": 1205,
+      "sl": 0,
+      "tp1": 0,
+      "tp2": 0,
+      "tp3": 0,
+      "is_fca": false,
+      "ket": "",
+      "hit_dates": [
+        "2026-09-29"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-29": {
+          "price": 1205,
+          "category": "Flow Masuk",
+          "ket": ""
+        }
+      }
     }
   ],
   "awakened_history": [
@@ -91,7 +2792,19 @@
       "gain_pct": 10.61,
       "status_exit": "BUNGKUS MANUAL 💰",
       "note": "Amankan modal (Bungkus dulu)",
-      "category": "Saham Tidur"
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-09"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-09": {
+          "price": 66,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
     },
     {
       "ticker": "BEEF",
@@ -104,7 +2817,19 @@
       "gain_pct": 10.96,
       "status_exit": "BUNGKUS MANUAL 💰",
       "note": "Dekat TP 1 tapi antrean berat, amankan cuan",
-      "category": "Saham Tidur"
+      "category": "Saham Tidur",
+      "ket": "",
+      "hit_dates": [
+        "2026-09-10"
+      ],
+      "hit_count": 1,
+      "hit_details": {
+        "2026-09-10": {
+          "price": 438,
+          "category": "Saham Tidur",
+          "ket": ""
+        }
+      }
     }
   ],
   "failed_history": []

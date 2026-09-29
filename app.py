@@ -1147,6 +1147,7 @@ def get_stock_calendar_events(ticker, data):
                 ev_cat = d_detail.get("category") or cat
                 ev_ket = d_detail.get("ket") or (ket if d == s.get("entry_date") else "")
                 add_event(d, {
+                    "ticker": t_upper,
                     "source": "ACTIVE",
                     "category": ev_cat,
                     "price": ev_price,
@@ -1174,6 +1175,7 @@ def get_stock_calendar_events(ticker, data):
                 ev_cat = d_detail.get("category") or cat
                 ev_ket = d_detail.get("ket") or ket
                 add_event(d, {
+                    "ticker": t_upper,
                     "source": "HISTORY_HIT",
                     "category": ev_cat,
                     "price": ev_price,
@@ -1184,6 +1186,7 @@ def get_stock_calendar_events(ticker, data):
 
             if exit_d and exit_d != h.get("entry_date"):
                 add_event(exit_d, {
+                    "ticker": t_upper,
                     "source": "EXIT_TP",
                     "category": cat,
                     "price": exit_p,
@@ -1211,6 +1214,7 @@ def get_stock_calendar_events(ticker, data):
                 ev_cat = d_detail.get("category") or cat
                 ev_ket = d_detail.get("ket") or ket
                 add_event(d, {
+                    "ticker": t_upper,
                     "source": "FAILED_HIT",
                     "category": ev_cat,
                     "price": ev_price,
@@ -1221,6 +1225,7 @@ def get_stock_calendar_events(ticker, data):
 
             if exit_d and exit_d != f.get("entry_date"):
                 add_event(exit_d, {
+                    "ticker": t_upper,
                     "source": "EXIT_SL",
                     "category": cat,
                     "price": exit_p,
@@ -1381,36 +1386,36 @@ def render_single_stock_focus(data, is_editor):
     else:
         st.markdown(chip_html, unsafe_allow_html=True)
 
-    # ── Loop per saham terpilih ─────────────────────────────────────────────
-    for sel_idx_t, selected_ticker in enumerate(selected_tickers):
-        meta = ticker_meta[selected_ticker]
-        events_by_date = get_stock_calendar_events(selected_ticker, data)
+    # ── Auto-sync kalender ke deteksi terbaru saham terpilih ────────────────
+    all_selected_dates = set()
+    for t in selected_tickers:
+        all_selected_dates.update(ticker_meta[t]["dates"])
+    latest_date_str = max(all_selected_dates) if all_selected_dates else str(datetime.date.today())
+    try:
+        latest_d = datetime.datetime.strptime(latest_date_str, "%Y-%m-%d").date()
+    except:
+        latest_d = datetime.date.today()
 
-        # Auto-sync kalender ke deteksi terbaru saat pertama kali saham pertama ditampilkan
-        if sel_idx_t == 0:
-            latest_date_str = max(meta["dates"]) if meta["dates"] else str(datetime.date.today())
-            try:
-                latest_d = datetime.datetime.strptime(latest_date_str, "%Y-%m-%d").date()
-            except:
-                latest_d = datetime.date.today()
+    if st.session_state.get("last_focused_tickers") != selected_tickers:
+        st.session_state["last_focused_tickers"] = list(selected_tickers)
+        st.session_state["focus_cal_year"] = latest_d.year
+        st.session_state["focus_cal_month"] = latest_d.month
 
-            if st.session_state.get("last_focused_ticker") != selected_ticker:
-                st.session_state["last_focused_ticker"] = selected_ticker
-                st.session_state["focus_cal_year"] = latest_d.year
-                st.session_state["focus_cal_month"] = latest_d.month
+    if "focus_cal_year" not in st.session_state:
+        st.session_state["focus_cal_year"] = latest_d.year
+    if "focus_cal_month" not in st.session_state:
+        st.session_state["focus_cal_month"] = latest_d.month
 
-            if "focus_cal_year" not in st.session_state:
-                st.session_state["focus_cal_year"] = latest_d.year
-            if "focus_cal_month" not in st.session_state:
-                st.session_state["focus_cal_month"] = latest_d.month
+    st.markdown("---")
 
-        st.markdown("---")
-
-        # ── 1. Summary Cards ─────────────────────────────────────────────────
+    # ── 1. Summary Cards ───────────────────────────────────────────────────
+    if len(selected_tickers) == 1:
+        single_ticker = selected_tickers[0]
+        meta = ticker_meta[single_ticker]
         m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns([1.5, 1.8, 1.5, 1.5, 1.5])
         with m_col1:
             sya_badge = "🕌 Syariah (ISSI)" if meta["is_syariah"] else "🏢 Non-Syariah"
-            st.metric("Kode Saham", selected_ticker, sya_badge)
+            st.metric("Kode Saham", single_ticker, sya_badge)
         with m_col2:
             status_txt = "🟢 Aktif di Watchlist" if meta["is_active"] else "📜 Selesai Ditradingkan"
             cats_label = " + ".join(sorted(list(meta["categories"])))
@@ -1430,232 +1435,310 @@ def render_single_stock_focus(data, is_editor):
             if tp1_val > 0:
                 tp_sl_str += f" | TP1: {format_id_number(tp1_val)}"
             st.metric("Batas Risiko / Target", tp_sl_str, meta.get("ket") or "-")
+    else:
+        # Ringkasan multi-saham
+        active_count = sum(1 for t in selected_tickers if ticker_meta[t]["is_active"])
+        history_count = len(selected_tickers) - active_count
+        all_cats = set()
+        for t in selected_tickers:
+            all_cats.update(ticker_meta[t]["categories"])
+        total_unique_days = len(all_selected_dates)
 
-        # ── 2. Kalender Header & Navigator (hanya saham pertama atau semua?) ──
-        # Navigator kalender hanya ditampilkan sekali (shared untuk semua saham terpilih)
-        if sel_idx_t == 0:
-            c_head1, c_head2 = st.columns([3, 1.5])
-            with c_head1:
-                tickers_str = " & ".join(selected_tickers)
-                st.markdown(f"#### 📅 Kalender Screener: **{tickers_str}**")
-            with c_head2:
-                st.link_button(
-                    f"📈 Chart {selected_ticker}",
-                    f"https://www.tradingview.com/chart/?symbol=IDX:{selected_ticker}",
-                    use_container_width=True
-                )
+        m_col1, m_col2, m_col3, m_col4 = st.columns([1.5, 2, 1.5, 1.5])
+        with m_col1:
+            st.metric("Saham Dipilih", f"{len(selected_tickers)} Saham", f"{active_count} Aktif, {history_count} Selesai")
+        with m_col2:
+            st.metric("Kategori Terwakili", f"{len(all_cats)} Kategori", " + ".join(sorted(list(all_cats))))
+        with m_col3:
+            st.metric("Total Hari Terdeteksi", f"{total_unique_days} Hari", "Riwayat Gabungan")
+        with m_col4:
+            cur_y = st.session_state["focus_cal_year"]
+            cur_m = st.session_state["focus_cal_month"]
+            st.metric("Periode Kalender", f"{MONTH_NAMES[cur_m]} {cur_y}", f"{len(selected_tickers)} Saham Ditampilkan")
 
-            cur_year = st.session_state["focus_cal_year"]
-            cur_month = st.session_state["focus_cal_month"]
+        with st.expander("📊 Lihat Detail Kartu Metrik Tiap Saham Terpilih", expanded=False):
+            for t in selected_tickers:
+                meta = ticker_meta[t]
+                st.markdown(f"**Emiten: {t}**")
+                c1, c2, c3, c4, c5 = st.columns([1.2, 1.8, 1.3, 1.3, 1.4])
+                with c1:
+                    sya_badge = "🕌 Syariah" if meta["is_syariah"] else "🏢 Non-Syariah"
+                    st.metric("Kode", t, sya_badge)
+                with c2:
+                    status_txt = "🟢 Aktif" if meta["is_active"] else "📜 Selesai"
+                    cats_label = " + ".join(sorted(list(meta["categories"])))
+                    st.metric("Status", status_txt, cats_label)
+                with c3:
+                    st.metric("Harga Awal", f"Rp {format_id_number(meta['entry_price'])}", f"{len(meta['dates'])} Hari")
+                with c4:
+                    ep = meta["entry_price"]
+                    cp = meta["current_price"]
+                    g_val = ((cp - ep) / ep * 100) if ep > 0 else 0.0
+                    st.metric("Harga Terkini", f"Rp {format_id_number(cp)}", f"{g_val:+.2f}%")
+                with c5:
+                    sl_v = meta.get("sl", 0)
+                    tp_v = meta.get("tp1", 0)
+                    r_str = f"SL: {format_id_number(sl_v)}" if sl_v > 0 else "SL: -"
+                    if tp_v > 0:
+                        r_str += f" | TP1: {format_id_number(tp_v)}"
+                    st.metric("Batas Risiko", r_str, meta.get("ket") or "-")
+                st.markdown("---")
 
-            nav_col1, nav_col2, nav_col3, nav_col4, nav_col5 = st.columns([1.2, 2.2, 1.6, 1.2, 1.2])
-            with nav_col1:
-                if st.button("◀ Sebelumnya", key="btn_focus_prev_cal", use_container_width=True):
-                    if cur_month == 1:
-                        st.session_state["focus_cal_month"] = 12
-                        st.session_state["focus_cal_year"] -= 1
-                    else:
-                        st.session_state["focus_cal_month"] -= 1
-                    st.rerun()
-            with nav_col2:
-                chosen_month = st.selectbox(
-                    "Pilih Bulan:",
-                    options=list(range(1, 13)),
-                    index=cur_month - 1,
-                    format_func=lambda m: MONTH_NAMES[m],
-                    key=f"sb_focus_month_{cur_month}_{cur_year}"
-                )
-                if chosen_month != cur_month:
-                    st.session_state["focus_cal_month"] = chosen_month
-                    st.rerun()
-            with nav_col3:
-                all_years = sorted(list(set(
-                    [2024, 2025, 2026, 2027, datetime.date.today().year] +
-                    [int(d[:4]) for d in meta["dates"] if len(d) >= 4 and d[:4].isdigit()]
-                )))
-                year_idx = all_years.index(cur_year) if cur_year in all_years else 0
-                chosen_year = st.selectbox(
-                    "Pilih Tahun:",
-                    options=all_years,
-                    index=year_idx,
-                    key=f"sb_focus_year_{cur_year}_{cur_month}"
-                )
-                if chosen_year != cur_year:
-                    st.session_state["focus_cal_year"] = chosen_year
-                    st.rerun()
-            with nav_col4:
-                if st.button("Berikutnya ▶", key="btn_focus_next_cal", use_container_width=True):
-                    if cur_month == 12:
-                        st.session_state["focus_cal_month"] = 1
-                        st.session_state["focus_cal_year"] += 1
-                    else:
-                        st.session_state["focus_cal_month"] += 1
-                    st.rerun()
-            with nav_col5:
-                if st.button("📅 Bulan Ini", key="btn_focus_today_cal", use_container_width=True):
-                    td = datetime.date.today()
-                    st.session_state["focus_cal_month"] = td.month
-                    st.session_state["focus_cal_year"] = td.year
-                    st.rerun()
+    # ── 2. Kalender Header & Navigator ───────────────────────────────────────
+    c_head1, c_head2 = st.columns([3, 1.5])
+    with c_head1:
+        if len(selected_tickers) == 1:
+            st.markdown(f"#### 📅 Kalender Screener: **{selected_tickers[0]}**")
         else:
-            # Untuk saham ke-2, 3, dst: tampilkan sub-header + link chart saja
-            c_h1, c_h2 = st.columns([3, 1.5])
-            with c_h1:
-                st.markdown(f"#### 📅 Kalender Screener: **{selected_ticker}**")
-            with c_h2:
-                st.link_button(
-                    f"📈 Chart {selected_ticker}",
-                    f"https://www.tradingview.com/chart/?symbol=IDX:{selected_ticker}",
-                    use_container_width=True
-                )
-
-        # ── 3. Info deteksi bulan ini ─────────────────────────────────────────
-        cur_year = st.session_state["focus_cal_year"]
-        cur_month = st.session_state["focus_cal_month"]
-        month_prefix = f"{cur_year:04d}-{cur_month:02d}"
-
-        month_events = [
-            ev for d_str, ev_list in events_by_date.items()
-            if d_str.startswith(month_prefix)
-            for ev in ev_list
-        ]
-        month_dates_count = len([d_str for d_str in events_by_date if d_str.startswith(month_prefix)])
-
-        if month_events:
-            st.success(f"🔥 **{selected_ticker}** terdeteksi pada **{month_dates_count} tanggal** screener di bulan **{MONTH_NAMES[cur_month]} {cur_year}**!")
-        else:
-            st.info(f"ℹ️ Tidak ada kemunculan screener **{selected_ticker}** pada **{MONTH_NAMES[cur_month]} {cur_year}**.")
-
-        # ── 4. Grid Kalender ─────────────────────────────────────────────────
-        import calendar as _cal_mod
-        _cal_mod.setfirstweekday(_cal_mod.MONDAY)
-        weeks = _cal_mod.monthcalendar(cur_year, cur_month)
-        day_headers = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu (Libur)", "Minggu (Libur)"]
-
-        html_parts = []
-        html_parts.append('<div style="width:100%; overflow-x:auto; margin-top:12px; margin-bottom:20px;">')
-        html_parts.append('<div style="min-width:700px;">')
-        html_parts.append('<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:8px;">')
-        for idx, h_name in enumerate(day_headers):
-            bg = "#334155" if idx < 5 else "#64748b"
-            color = "#ffffff" if idx < 5 else "#e2e8f0"
-            html_parts.append(
-                f'<div style="text-align:center; font-weight:700; font-size:12.5px; padding:8px 4px; background:{bg}; color:{color}; border-radius:6px;">{h_name}</div>'
+            tickers_str = ", ".join(selected_tickers)
+            st.markdown(f"#### 📅 Kalender Screener Gabungan: **{tickers_str}**")
+    with c_head2:
+        if len(selected_tickers) == 1:
+            st.link_button(
+                f"📈 Chart {selected_tickers[0]}",
+                f"https://www.tradingview.com/chart/?symbol=IDX:{selected_tickers[0]}",
+                use_container_width=True
             )
-        html_parts.append('</div>')
-        html_parts.append('<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">')
-
-        today_str = str(datetime.date.today())
-
-        for week in weeks:
-            for col_idx, day_num in enumerate(week):
-                if day_num == 0:
-                    html_parts.append(
-                        '<div style="min-height:95px; background:rgba(125,125,125,0.03); border:1px dashed rgba(125,125,125,0.15); border-radius:8px;"></div>'
-                    )
-                else:
-                    date_str = f"{cur_year:04d}-{cur_month:02d}-{day_num:02d}"
-                    day_events = events_by_date.get(date_str, [])
-                    is_today = (date_str == today_str)
-                    is_weekend = (col_idx >= 5)
-
-                    if day_events:
-                        border_style = "2px solid #10b981"
-                        bg_style = "rgba(16,185,129,0.09)"
-                        shadow_style = "box-shadow: 0 4px 6px -1px rgba(16,185,129,0.2);"
-                    else:
-                        border_style = "1px solid rgba(125,125,125,0.2)"
-                        bg_style = "rgba(125,125,125,0.02)" if is_weekend else "rgba(125,125,125,0.05)"
-                        shadow_style = ""
-
-                    today_ring = "outline: 2px solid #3b82f6; outline-offset: -2px;" if is_today else ""
-                    badge_top = (
-                        '<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">Screener</span>'
-                        if day_events else
-                        ('<span style="font-size:9.5px; opacity:0.5;">Libur</span>' if is_weekend else '')
-                    )
-                    num_color = '#10b981' if day_events else 'inherit'
-
-                    cell = [
-                        f'<div style="min-height:100px; background:{bg_style}; border:{border_style}; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; {shadow_style} {today_ring}">',
-                        f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">',
-                        f'<span style="font-size:13px; font-weight:800; color:{num_color};">{day_num}</span>',
-                        f'{badge_top}',
-                        f'</div>'
-                    ]
-                    for ev in day_events:
-                        cat_name = ev.get("category", "Saham Tidur")
-                        if "fundamental" in cat_name.lower():
-                            badge_bg, icon = "#7c3aed", "💎"
-                        elif "flow" in cat_name.lower():
-                            badge_bg, icon = "#0284c7", "🌊"
-                        else:
-                            badge_bg, icon = "#d97706", "💤"
-
-                        ev_type = ev.get("source") or ev.get("type", "ACTIVE")
-                        if ev_type == "EXIT_TP":
-                            badge_bg, icon = "#16a34a", "💰"
-                        elif ev_type == "EXIT_SL":
-                            badge_bg, icon = "#dc2626", "🛑"
-
-                        p_val = ev.get("price", 0)
-                        ket_str = ev.get("ket", "")
-                        ket_badge = f'<div style="font-size:10px; opacity:0.85; font-style:italic; line-height:1.1; margin-top:1px;">{ket_str}</div>' if ket_str else ''
-                        cell.append(
-                            f'<div style="background:{badge_bg}; color:#fff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; margin-top:2px; line-height:1.2;">{icon} {cat_name}</div>'
-                            f'<div style="font-size:11.5px; font-weight:700; color:#10b981; margin-top:2px;">Harga: {format_id_number(p_val)}</div>'
-                            f'{ket_badge}'
-                        )
-                    cell.append('</div>')
-                    html_parts.append("".join(cell))
-
-        html_parts.append('</div>')
-        html_parts.append('</div>')
-        html_parts.append('</div>')
-
-        clean_cal_html = "\n".join(
-            line.strip()
-            for line in "".join(html_parts).splitlines()
-            if line.strip()
-        )
-        if hasattr(st, "html"):
-            st.html(clean_cal_html)
         else:
-            st.markdown(clean_cal_html, unsafe_allow_html=True)
+            first_t = selected_tickers[0]
+            st.link_button(
+                f"📈 Chart {first_t}",
+                f"https://www.tradingview.com/chart/?symbol=IDX:{first_t}",
+                use_container_width=True
+            )
 
-        # ── 5. Tabel Riwayat per Saham ────────────────────────────────────────
-        with st.expander(f"📋 Riwayat Deteksi Lengkap — {selected_ticker}", expanded=(sel_idx_t == 0)):
-            table_rows = []
-            for d_str in sorted(events_by_date.keys(), reverse=True):
-                for ev in events_by_date[d_str]:
-                    try:
-                        dt_obj = datetime.datetime.strptime(d_str, "%Y-%m-%d")
-                        day_name_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"][dt_obj.weekday()]
-                        formatted_d = f"{day_name_id}, {dt_obj.strftime('%d/%m/%Y')}"
-                    except:
-                        formatted_d = d_str
-                    table_rows.append({
-                        "Tanggal": formatted_d,
-                        "Kategori Screener": ev.get("category", "-"),
-                        "Harga": format_id_number(ev.get("price", 0)),
-                        "Keterangan": ev.get("ket") or "-",
-                        "Status": ev.get("status_label", "-")
-                    })
-            if table_rows:
-                st.dataframe(
-                    pd.DataFrame(table_rows),
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "Tanggal": st.column_config.TextColumn("Tanggal Deteksi", width="medium"),
-                        "Kategori Screener": st.column_config.TextColumn("Kategori Screener", width="medium"),
-                        "Harga": st.column_config.TextColumn("Harga Masuk / Deteksi", width="small", alignment="right"),
-                        "Keterangan": st.column_config.TextColumn("Keterangan", width="medium"),
-                        "Status": st.column_config.TextColumn("Status", width="medium"),
-                    }
+    cur_year = st.session_state["focus_cal_year"]
+    cur_month = st.session_state["focus_cal_month"]
+
+    nav_col1, nav_col2, nav_col3, nav_col4, nav_col5 = st.columns([1.2, 2.2, 1.6, 1.2, 1.2])
+    with nav_col1:
+        if st.button("◀ Sebelumnya", key="btn_focus_prev_cal", use_container_width=True):
+            if cur_month == 1:
+                st.session_state["focus_cal_month"] = 12
+                st.session_state["focus_cal_year"] -= 1
+            else:
+                st.session_state["focus_cal_month"] -= 1
+            st.rerun()
+    with nav_col2:
+        chosen_month = st.selectbox(
+            "Pilih Bulan:",
+            options=list(range(1, 13)),
+            index=cur_month - 1,
+            format_func=lambda m: MONTH_NAMES[m],
+            key=f"sb_focus_month_{cur_month}_{cur_year}"
+        )
+        if chosen_month != cur_month:
+            st.session_state["focus_cal_month"] = chosen_month
+            st.rerun()
+    with nav_col3:
+        all_years = sorted(list(set(
+            [2024, 2025, 2026, 2027, datetime.date.today().year] +
+            [int(d[:4]) for d in all_selected_dates if len(d) >= 4 and d[:4].isdigit()]
+        )))
+        year_idx = all_years.index(cur_year) if cur_year in all_years else 0
+        chosen_year = st.selectbox(
+            "Pilih Tahun:",
+            options=all_years,
+            index=year_idx,
+            key=f"sb_focus_year_{cur_year}_{cur_month}"
+        )
+        if chosen_year != cur_year:
+            st.session_state["focus_cal_year"] = chosen_year
+            st.rerun()
+    with nav_col4:
+        if st.button("Berikutnya ▶", key="btn_focus_next_cal", use_container_width=True):
+            if cur_month == 12:
+                st.session_state["focus_cal_month"] = 1
+                st.session_state["focus_cal_year"] += 1
+            else:
+                st.session_state["focus_cal_month"] += 1
+            st.rerun()
+    with nav_col5:
+        if st.button("📅 Bulan Ini", key="btn_focus_today_cal", use_container_width=True):
+            td = datetime.date.today()
+            st.session_state["focus_cal_month"] = td.month
+            st.session_state["focus_cal_year"] = td.year
+            st.rerun()
+
+    # Opsi filter tampilan kalender jika memilih >1 saham
+    active_cal_filter = "Semua Saham Terpilih (Gabungan)"
+    if len(selected_tickers) > 1:
+        filter_options = ["Semua Saham Terpilih (Gabungan)"] + selected_tickers
+        active_cal_filter = st.radio(
+            "Filter Tampilan di Kalender:",
+            options=filter_options,
+            horizontal=True,
+            key="rb_focus_cal_active_filter"
+        )
+
+    # ── 3. Agregasi Event Saham untuk Kalender ─────────────────────────────
+    target_tickers = selected_tickers if active_cal_filter == "Semua Saham Terpilih (Gabungan)" else [active_cal_filter]
+    events_by_date = {}
+    for t in target_tickers:
+        t_events = get_stock_calendar_events(t, data)
+        for d_str, ev_list in t_events.items():
+            if d_str not in events_by_date:
+                events_by_date[d_str] = []
+            events_by_date[d_str].extend(ev_list)
+
+    month_prefix = f"{cur_year:04d}-{cur_month:02d}"
+    month_events = [
+        ev for d_str, ev_list in events_by_date.items()
+        if d_str.startswith(month_prefix)
+        for ev in ev_list
+    ]
+    month_dates_count = len([d_str for d_str in events_by_date if d_str.startswith(month_prefix)])
+
+    if month_events:
+        tickers_label = ", ".join(target_tickers)
+        st.success(f"🔥 Saham **{tickers_label}** terdeteksi pada **{month_dates_count} tanggal** screener di bulan **{MONTH_NAMES[cur_month]} {cur_year}**!")
+    else:
+        st.info(f"ℹ️ Tidak ada catatan kemunculan screener pada bulan **{MONTH_NAMES[cur_month]} {cur_year}** untuk saham yang dipilih.")
+
+    # ── 4. Render Grid Kalender Bersama (Senin - Minggu) ───────────────────
+    import calendar as _cal_mod
+    _cal_mod.setfirstweekday(_cal_mod.MONDAY)
+    weeks = _cal_mod.monthcalendar(cur_year, cur_month)
+    day_headers = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu (Libur)", "Minggu (Libur)"]
+
+    html_parts = []
+    html_parts.append('<div style="width:100%; overflow-x:auto; margin-top:12px; margin-bottom:20px;">')
+    html_parts.append('<div style="min-width:700px;">')
+    html_parts.append('<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:8px;">')
+    for idx, h_name in enumerate(day_headers):
+        bg = "#334155" if idx < 5 else "#64748b"
+        color = "#ffffff" if idx < 5 else "#e2e8f0"
+        html_parts.append(
+            f'<div style="text-align:center; font-weight:700; font-size:12.5px; padding:8px 4px; background:{bg}; color:{color}; border-radius:6px;">{h_name}</div>'
+        )
+    html_parts.append('</div>')
+    html_parts.append('<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">')
+
+    today_str = str(datetime.date.today())
+
+    for week in weeks:
+        for col_idx, day_num in enumerate(week):
+            if day_num == 0:
+                html_parts.append(
+                    '<div style="min-height:95px; background:rgba(125,125,125,0.03); border:1px dashed rgba(125,125,125,0.15); border-radius:8px;"></div>'
                 )
             else:
-                st.caption("Belum ada riwayat deteksi tercatat untuk saham ini.")
+                date_str = f"{cur_year:04d}-{cur_month:02d}-{day_num:02d}"
+                day_events = events_by_date.get(date_str, [])
+                is_today = (date_str == today_str)
+                is_weekend = (col_idx >= 5)
+
+                if day_events:
+                    border_style = "2px solid #10b981"
+                    bg_style = "rgba(16,185,129,0.09)"
+                    shadow_style = "box-shadow: 0 4px 6px -1px rgba(16,185,129,0.2);"
+                else:
+                    border_style = "1px solid rgba(125,125,125,0.2)"
+                    bg_style = "rgba(125,125,125,0.02)" if is_weekend else "rgba(125,125,125,0.05)"
+                    shadow_style = ""
+
+                today_ring = "outline: 2px solid #3b82f6; outline-offset: -2px;" if is_today else ""
+                
+                # Badge judul hari: jika ada beberapa saham di hari yang sama, tulis jumlah saham
+                if day_events:
+                    day_tickers = set(ev.get("ticker", "") for ev in day_events if ev.get("ticker"))
+                    if len(day_tickers) > 1:
+                        badge_top = f'<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">{len(day_tickers)} Saham</span>'
+                    else:
+                        badge_top = '<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">Screener</span>'
+                else:
+                    badge_top = '<span style="font-size:9.5px; opacity:0.5;">Libur</span>' if is_weekend else ''
+
+                num_color = '#10b981' if day_events else 'inherit'
+
+                cell = [
+                    f'<div style="min-height:100px; background:{bg_style}; border:{border_style}; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; {shadow_style} {today_ring}">',
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">',
+                    f'<span style="font-size:13px; font-weight:800; color:{num_color};">{day_num}</span>',
+                    f'{badge_top}',
+                    f'</div>'
+                ]
+                for ev in day_events:
+                    ev_ticker = ev.get("ticker", "")
+                    cat_name = ev.get("category", "Saham Tidur")
+                    if "fundamental" in cat_name.lower():
+                        badge_bg, icon = "#7c3aed", "💎"
+                    elif "flow" in cat_name.lower():
+                        badge_bg, icon = "#0284c7", "🌊"
+                    else:
+                        badge_bg, icon = "#d97706", "💤"
+
+                    ev_type = ev.get("source") or ev.get("type", "ACTIVE")
+                    if ev_type == "EXIT_TP":
+                        badge_bg, icon = "#16a34a", "💰"
+                    elif ev_type == "EXIT_SL":
+                        badge_bg, icon = "#dc2626", "🛑"
+
+                    p_val = ev.get("price", 0)
+                    ket_str = ev.get("ket", "")
+                    ket_badge = f'<div style="font-size:9.5px; opacity:0.85; font-style:italic; line-height:1.1; margin-top:1px;">{ket_str}</div>' if ket_str else ''
+                    
+                    # Label ticker jika menampilkan >1 saham
+                    ticker_prefix = f"<b>[{ev_ticker}]</b> " if (len(target_tickers) > 1 or len(selected_tickers) > 1) else ""
+
+                    cell.append(
+                        f'<div style="background:{badge_bg}; color:#fff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; margin-top:2px; line-height:1.2;">{icon} {ticker_prefix}{cat_name}</div>'
+                        f'<div style="font-size:11.5px; font-weight:700; color:#10b981; margin-top:1px;">Harga: {format_id_number(p_val)}</div>'
+                        f'{ket_badge}'
+                    )
+                cell.append('</div>')
+                html_parts.append("".join(cell))
+
+    html_parts.append('</div>')
+    html_parts.append('</div>')
+    html_parts.append('</div>')
+
+    clean_cal_html = "\n".join(
+        line.strip()
+        for line in "".join(html_parts).splitlines()
+        if line.strip()
+    )
+    if hasattr(st, "html"):
+        st.html(clean_cal_html)
+    else:
+        st.markdown(clean_cal_html, unsafe_allow_html=True)
+
+    # ── 5. Tabel Riwayat Deteksi Bersama ───────────────────────────────────
+    st.markdown("##### 📋 Riwayat Lengkap Deteksi Saham Terpilih")
+    table_rows = []
+    for d_str in sorted(events_by_date.keys(), reverse=True):
+        for ev in events_by_date[d_str]:
+            try:
+                dt_obj = datetime.datetime.strptime(d_str, "%Y-%m-%d")
+                day_name_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"][dt_obj.weekday()]
+                formatted_d = f"{day_name_id}, {dt_obj.strftime('%d/%m/%Y')}"
+            except:
+                formatted_d = d_str
+            table_rows.append({
+                "Tanggal": formatted_d,
+                "Kode Saham": ev.get("ticker", "-"),
+                "Kategori Screener": ev.get("category", "-"),
+                "Harga": format_id_number(ev.get("price", 0)),
+                "Keterangan": ev.get("ket") or "-",
+                "Status": ev.get("status_label", "-")
+            })
+
+    if table_rows:
+        st.dataframe(
+            pd.DataFrame(table_rows),
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Tanggal": st.column_config.TextColumn("Tanggal Deteksi", width="medium"),
+                "Kode Saham": st.column_config.TextColumn("Kode Saham", width="small"),
+                "Kategori Screener": st.column_config.TextColumn("Kategori Screener", width="medium"),
+                "Harga": st.column_config.TextColumn("Harga Masuk / Deteksi", width="small", alignment="right"),
+                "Keterangan": st.column_config.TextColumn("Keterangan", width="medium"),
+                "Status": st.column_config.TextColumn("Status", width="medium"),
+            }
+        )
+    else:
+        st.caption("Belum ada riwayat deteksi tercatat untuk saham yang dipilih.")
 
 
 # ==========================================

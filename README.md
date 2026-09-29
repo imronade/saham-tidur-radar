@@ -101,6 +101,19 @@ Web dashboard interaktif untuk memantau, menganalisis, dan mencatat pergerakan s
 * **1-Click Backup**: Di sidebar saat login Editor, tersedia tombol **📥 Download stocks_data.json** untuk mengunduh seluruh database ke laptop Anda kapan saja.
 * **Restore Fleksibel**: Dilengkapi fitur upload JSON cadangan dengan dukungan UTF-8 tanpa BOM.
 
+### 14. 🎯 Tab Fokus Satu Saham & Kalender Bulanan Screener (Senin - Minggu)
+* **Pemilihan Satu Saham**: Dropdown interaktif untuk memilih dan menganalisa satu emiten secara mendalam dari daftar hasil screener (baik yang aktif di watchlist maupun yang telah selesai).
+* **Ringkasan Saham**: Menampilkan kartu metrik komprehensif (Kode Saham, Syariah ISSI, Kategori Terdeteksi, Harga Awal & Terkini, Floating Gain, Total Frekuensi Kemunculan, dan Batas Risiko / Target TP).
+* **Kalender Bulanan Format Bursa (Senin - Minggu)**:
+  * Tampilan kotak tanggal kalender berurutan dari **Senin hingga Minggu** (dengan penanda khusus akhir pekan *Sabtu/Minggu - Bursa Libur*).
+  * **Highlight Tanggal Screener**: Setiap tanggal di mana saham terdeteksi masuk screener ditandai dengan kartu beraksen hijau, menampilkan badge kategori screener (`🌊 Flow Masuk`, `💤 Saham Tidur`, `💎 Flow + Fundamental`), harga masuk/penutupan, dan keterangan pergerakan.
+  * **Pencatatan Exit / TP / SL**: Hari realisasi take profit atau cut loss juga ditandai khusus pada kalender.
+* **Navigasi Waktu Fleksibel**:
+  * Tombol navigasi **◀ Sebelumnya** dan **Berikutnya ▶** untuk menjelajah bulan dengan cepat.
+  * Dropdown pemilihan **Bulan** dan **Tahun** secara bebas.
+  * Tombol pintas **📅 Bulan Ini** untuk langsung kembali ke periode riil saat ini.
+* **Rekap Tabular Lengkap**: Dilengkapi tabel riwayat detail seluruh tanggal kemunculan dan status pergerakan emiten terpilih.
+
 ---
 
 ## 🛠️ Struktur Proyek

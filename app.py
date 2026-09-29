@@ -500,6 +500,14 @@ def load_data():
                 s["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [str(datetime.date.today())]
             if "hit_count" not in s:
                 s["hit_count"] = len(s["hit_dates"])
+            if "hit_details" not in s:
+                s["hit_details"] = {}
+                for hd in s["hit_dates"]:
+                    s["hit_details"][str(hd)] = {
+                        "price": s.get("entry_price", 0),
+                        "category": s.get("category", "Saham Tidur"),
+                        "ket": s.get("ket", "")
+                    }
         for h in data.get("awakened_history", []):
             if "category" not in h:
                 h["category"] = "Saham Tidur"
@@ -510,6 +518,14 @@ def load_data():
                 h["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [h.get("awakened_date", "-")]
             if "hit_count" not in h:
                 h["hit_count"] = len(h["hit_dates"])
+            if "hit_details" not in h:
+                h["hit_details"] = {}
+                for hd in h["hit_dates"]:
+                    h["hit_details"][str(hd)] = {
+                        "price": h.get("entry_price", 0),
+                        "category": h.get("category", "Saham Tidur"),
+                        "ket": h.get("ket", "")
+                    }
         for f in data.get("failed_history", []):
             if "category" not in f:
                 f["category"] = "Saham Tidur"
@@ -520,6 +536,14 @@ def load_data():
                 f["hit_dates"] = [entry_d] if (entry_d and entry_d != "-") else [f.get("exit_date", "-")]
             if "hit_count" not in f:
                 f["hit_count"] = len(f["hit_dates"])
+            if "hit_details" not in f:
+                f["hit_details"] = {}
+                for hd in f["hit_dates"]:
+                    f["hit_details"][str(hd)] = {
+                        "price": f.get("entry_price", 0),
+                        "category": f.get("category", "Saham Tidur"),
+                        "ket": f.get("ket", "")
+                    }
         return data
 
 def save_data(data):
@@ -1086,10 +1110,527 @@ def render_screener_table(category_label, category_badge, tab_key, active_list, 
             st.caption(f"💡 *Mode Editor*: Gunakan tab Quick Import / Tambah Satuan / Kelola Watchlist di Panel Editor untuk mengisi saham ke kategori **{category_label}**.")
 
 # ==========================================
-# 3. TIGA TAB HASIL SCREENER (FLOW, GOLDEN, TIDUR)
+# FUNGSI & TAB FOKUS SATU SAHAM (KALENDER DETEKSI)
 # ==========================================
-st.markdown("### 🎯 Hasil Screener Saham")
-st.caption("Pilih tab di bawah untuk memantau saham aktif berdasarkan kategori screener:")
+def get_stock_calendar_events(ticker, data):
+    """
+    Mengumpulkan seluruh riwayat kemunculan dan aktivitas saham
+    per tanggal (format dict: { 'YYYY-MM-DD': [event1, event2, ...] }).
+    """
+    events_by_date = {}
+
+    def add_event(date_str, ev):
+        if not date_str or str(date_str) == "-":
+            return
+        d_clean = str(date_str).strip()
+        if len(d_clean) != 10 or d_clean[4] != "-" or d_clean[7] != "-":
+            return
+        if d_clean not in events_by_date:
+            events_by_date[d_clean] = []
+        events_by_date[d_clean].append(ev)
+
+    t_upper = ticker.strip().upper()
+
+    # 1. Active stocks
+    for s in data.get("active_stocks", []):
+        if s.get("ticker", "").upper() == t_upper:
+            cat = s.get("category", "Saham Tidur")
+            entry_p = s.get("entry_price", 0)
+            curr_p = s.get("current_price", 0)
+            ket = s.get("ket", "")
+            hit_dates = s.get("hit_dates", [s.get("entry_date")])
+            hit_details = s.get("hit_details", {})
+
+            for d in hit_dates:
+                d_detail = hit_details.get(str(d), {})
+                ev_price = d_detail.get("price") or (entry_p if d == s.get("entry_date") else curr_p or entry_p)
+                ev_cat = d_detail.get("category") or cat
+                ev_ket = d_detail.get("ket") or (ket if d == s.get("entry_date") else "")
+                add_event(d, {
+                    "source": "ACTIVE",
+                    "category": ev_cat,
+                    "price": ev_price,
+                    "ket": ev_ket,
+                    "status_label": "Aktif di Watchlist",
+                    "is_entry": (d == s.get("entry_date"))
+                })
+
+    # 2. Awakened history (Take Profit / Selesai)
+    for h in data.get("awakened_history", []):
+        if h.get("ticker", "").upper() == t_upper:
+            cat = h.get("category", "Saham Tidur")
+            entry_p = h.get("entry_price", 0)
+            exit_p = h.get("exit_price", 0)
+            gain_pct = h.get("gain_pct", 0.0)
+            status_exit = h.get("status_exit", "SELESAI (DONE)")
+            ket = h.get("ket", "")
+            hit_dates = h.get("hit_dates", [h.get("entry_date")])
+            hit_details = h.get("hit_details", {})
+            exit_d = h.get("awakened_date")
+
+            for d in hit_dates:
+                d_detail = hit_details.get(str(d), {})
+                ev_price = d_detail.get("price") or entry_p
+                ev_cat = d_detail.get("category") or cat
+                ev_ket = d_detail.get("ket") or ket
+                add_event(d, {
+                    "source": "HISTORY_HIT",
+                    "category": ev_cat,
+                    "price": ev_price,
+                    "ket": ev_ket,
+                    "status_label": "Screener Detection",
+                    "is_entry": (d == h.get("entry_date"))
+                })
+
+            if exit_d and exit_d != h.get("entry_date"):
+                add_event(exit_d, {
+                    "source": "EXIT_TP",
+                    "category": cat,
+                    "price": exit_p,
+                    "ket": f"{status_exit} (+{gain_pct:.1f}%)" if gain_pct > 0 else status_exit,
+                    "status_label": "Trade Selesai",
+                    "is_entry": False
+                })
+
+    # 3. Failed history (Cut Loss)
+    for f in data.get("failed_history", []):
+        if f.get("ticker", "").upper() == t_upper:
+            cat = f.get("category", "Saham Tidur")
+            entry_p = f.get("entry_price", 0)
+            exit_p = f.get("exit_price", 0)
+            loss_pct = f.get("loss_pct", 0.0)
+            status_exit = f.get("status_exit", "CUT LOSS")
+            ket = f.get("ket", "")
+            hit_dates = f.get("hit_dates", [f.get("entry_date")])
+            hit_details = f.get("hit_details", {})
+            exit_d = f.get("exit_date")
+
+            for d in hit_dates:
+                d_detail = hit_details.get(str(d), {})
+                ev_price = d_detail.get("price") or entry_p
+                ev_cat = d_detail.get("category") or cat
+                ev_ket = d_detail.get("ket") or ket
+                add_event(d, {
+                    "source": "FAILED_HIT",
+                    "category": ev_cat,
+                    "price": ev_price,
+                    "ket": ev_ket,
+                    "status_label": "Screener Detection",
+                    "is_entry": (d == f.get("entry_date"))
+                })
+
+            if exit_d and exit_d != f.get("entry_date"):
+                add_event(exit_d, {
+                    "source": "EXIT_SL",
+                    "category": cat,
+                    "price": exit_p,
+                    "ket": f"{status_exit} ({loss_pct:.1f}%)",
+                    "status_label": "Cut Loss",
+                    "is_entry": False
+                })
+
+    return events_by_date
+
+
+def render_single_stock_focus(data, is_editor):
+    st.markdown("#### 🎯 Fokus & Kalender Satu Saham")
+    st.caption("Pilih satu saham hasil screener untuk melihat rekap riwayat deteksi dalam format kalender bursa bulanan (Senin - Minggu).")
+
+    active_stocks = data.get("active_stocks", [])
+    history_stocks = data.get("awakened_history", [])
+    failed_stocks = data.get("failed_history", [])
+
+    ticker_meta = {}
+    for s in active_stocks:
+        t = s["ticker"].upper()
+        if t not in ticker_meta:
+            ticker_meta[t] = {
+                "categories": set(),
+                "is_active": True,
+                "is_syariah": s.get("is_syariah", True),
+                "total_hits": 0,
+                "dates": set(),
+                "entry_price": s.get("entry_price", 0),
+                "current_price": s.get("current_price", 0),
+                "sl": s.get("sl", 0),
+                "tp1": s.get("tp1", 0),
+                "tp2": s.get("tp2", 0),
+                "tp3": s.get("tp3", 0),
+                "ket": s.get("ket", "")
+            }
+        ticker_meta[t]["categories"].add(s.get("category", "Saham Tidur"))
+        for d in s.get("hit_dates", [s.get("entry_date")]):
+            if d and d != "-":
+                ticker_meta[t]["dates"].add(str(d))
+        ticker_meta[t]["total_hits"] += s.get("hit_count", 1)
+
+    for h in history_stocks:
+        t = h["ticker"].upper()
+        if t not in ticker_meta:
+            ticker_meta[t] = {
+                "categories": set(),
+                "is_active": False,
+                "is_syariah": h.get("is_syariah", True),
+                "total_hits": 0,
+                "dates": set(),
+                "entry_price": h.get("entry_price", 0),
+                "current_price": h.get("exit_price", 0),
+                "sl": 0, "tp1": 0, "tp2": 0, "tp3": 0,
+                "ket": h.get("ket", "")
+            }
+        ticker_meta[t]["categories"].add(h.get("category", "Saham Tidur"))
+        for d in h.get("hit_dates", [h.get("entry_date")]):
+            if d and d != "-":
+                ticker_meta[t]["dates"].add(str(d))
+        if h.get("awakened_date") and h.get("awakened_date") != "-":
+            ticker_meta[t]["dates"].add(str(h.get("awakened_date")))
+        ticker_meta[t]["total_hits"] += h.get("hit_count", 1)
+
+    for f in failed_stocks:
+        t = f["ticker"].upper()
+        if t not in ticker_meta:
+            ticker_meta[t] = {
+                "categories": set(),
+                "is_active": False,
+                "is_syariah": f.get("is_syariah", True),
+                "total_hits": 0,
+                "dates": set(),
+                "entry_price": f.get("entry_price", 0),
+                "current_price": f.get("exit_price", 0),
+                "sl": f.get("sl", 0), "tp1": 0, "tp2": 0, "tp3": 0,
+                "ket": f.get("ket", "")
+            }
+        ticker_meta[t]["categories"].add(f.get("category", "Saham Tidur"))
+        for d in f.get("hit_dates", [f.get("entry_date")]):
+            if d and d != "-":
+                ticker_meta[t]["dates"].add(str(d))
+        if f.get("exit_date") and f.get("exit_date") != "-":
+            ticker_meta[t]["dates"].add(str(f.get("exit_date")))
+        ticker_meta[t]["total_hits"] += f.get("hit_count", 1)
+
+    all_tickers = sorted(list(ticker_meta.keys()))
+    if not all_tickers:
+        st.info("Belum ada data saham di database. Silakan impor atau tambahkan saham terlebih dahulu.")
+        return
+
+    # Filter & Pilihan Saham
+    col_sel_stock, col_filter_status = st.columns([3, 1.5])
+    with col_filter_status:
+        stock_filter = st.selectbox(
+            "Filter Status:",
+            ["Semua Saham", "Hanya Aktif di Watchlist", "Hanya Selesai (Histori)"],
+            key="focus_stock_filter"
+        )
+
+    filtered_tickers = all_tickers
+    if stock_filter == "Hanya Aktif di Watchlist":
+        filtered_tickers = [t for t in all_tickers if ticker_meta[t]["is_active"]]
+    elif stock_filter == "Hanya Selesai (Histori)":
+        filtered_tickers = [t for t in all_tickers if not ticker_meta[t]["is_active"]]
+
+    if not filtered_tickers:
+        st.warning(f"Tidak ada saham yang sesuai dengan filter '{stock_filter}'.")
+        return
+
+    def format_stock_option(t):
+        m = ticker_meta[t]
+        status_tag = "🟢 Aktif" if m["is_active"] else "📜 Selesai"
+        cats_str = " + ".join(sorted(list(m["categories"])))
+        return f"{t} ({cats_str}) — {len(m['dates'])} Hari Terdeteksi [{status_tag}]"
+
+    with col_sel_stock:
+        default_idx = 0
+        saved_ticker = st.session_state.get("focus_selected_ticker")
+        if saved_ticker and saved_ticker in filtered_tickers:
+            default_idx = filtered_tickers.index(saved_ticker)
+
+        selected_ticker = st.selectbox(
+            "🔍 Pilih Saham Hasil Screener:",
+            options=filtered_tickers,
+            index=default_idx,
+            format_func=format_stock_option,
+            key="sb_selected_focus_stock"
+        )
+
+    st.session_state["focus_selected_ticker"] = selected_ticker
+    meta = ticker_meta[selected_ticker]
+    events_by_date = get_stock_calendar_events(selected_ticker, data)
+
+    # Otomatis sinkronkan bulan & tahun ke tanggal deteksi terbaru saat berganti saham
+    latest_date_str = max(meta["dates"]) if meta["dates"] else str(datetime.date.today())
+    try:
+        latest_d = datetime.datetime.strptime(latest_date_str, "%Y-%m-%d").date()
+    except:
+        latest_d = datetime.date.today()
+
+    if st.session_state.get("last_focused_ticker") != selected_ticker:
+        st.session_state["last_focused_ticker"] = selected_ticker
+        st.session_state["focus_cal_year"] = latest_d.year
+        st.session_state["focus_cal_month"] = latest_d.month
+
+    if "focus_cal_year" not in st.session_state:
+        st.session_state["focus_cal_year"] = latest_d.year
+    if "focus_cal_month" not in st.session_state:
+        st.session_state["focus_cal_month"] = latest_d.month
+
+    # 1. Summary Cards Saham
+    st.markdown("---")
+    m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns([1.5, 1.8, 1.5, 1.5, 1.5])
+
+    with m_col1:
+        sya_badge = "🕌 Syariah (ISSI)" if meta["is_syariah"] else "🏢 Non-Syariah"
+        st.metric("Kode Saham", selected_ticker, sya_badge)
+
+    with m_col2:
+        status_txt = "🟢 Aktif di Watchlist" if meta["is_active"] else "📜 Selesai Ditradingkan"
+        cats_label = " + ".join(sorted(list(meta["categories"])))
+        st.metric("Status Posisi", status_txt, cats_label)
+
+    with m_col3:
+        ep = meta["entry_price"]
+        st.metric("Harga Awal", f"Rp {format_id_number(ep)}", f"{format_hit_icon(len(meta['dates']))} {len(meta['dates'])} Hari")
+
+    with m_col4:
+        cp = meta["current_price"]
+        gain_val = ((cp - ep) / ep * 100) if ep > 0 else 0.0
+        delta_str = f"{gain_val:+.2f}%" if ep > 0 else "-"
+        st.metric("Harga Terkini", f"Rp {format_id_number(cp)}", delta_str)
+
+    with m_col5:
+        sl_val = meta.get("sl", 0)
+        tp1_val = meta.get("tp1", 0)
+        tp_sl_str = f"SL: {format_id_number(sl_val)}" if sl_val > 0 else "SL: -"
+        if tp1_val > 0:
+            tp_sl_str += f" | TP1: {format_id_number(tp1_val)}"
+        st.metric("Batas Risiko / Target", tp_sl_str, meta.get("ket") or "-")
+
+    # 2. Kalender Navigator (Pilih Bulan, Tahun, Next/Before)
+    st.markdown("---")
+    c_head1, c_head2 = st.columns([3, 1.5])
+    with c_head1:
+        st.markdown(f"#### 📅 Kalender Screener: **{selected_ticker}**")
+    with c_head2:
+        st.link_button(f"📈 Buka Chart {selected_ticker}", f"https://www.tradingview.com/chart/?symbol=IDX:{selected_ticker}", use_container_width=True)
+
+    cur_year = st.session_state["focus_cal_year"]
+    cur_month = st.session_state["focus_cal_month"]
+
+    nav_col1, nav_col2, nav_col3, nav_col4, nav_col5 = st.columns([1.2, 2.2, 1.6, 1.2, 1.2])
+
+    with nav_col1:
+        if st.button("◀ Sebelumnya", key="btn_focus_prev_cal", use_container_width=True):
+            if cur_month == 1:
+                st.session_state["focus_cal_month"] = 12
+                st.session_state["focus_cal_year"] -= 1
+            else:
+                st.session_state["focus_cal_month"] -= 1
+            st.rerun()
+
+    with nav_col2:
+        chosen_month = st.selectbox(
+            "Pilih Bulan:",
+            options=list(range(1, 13)),
+            index=cur_month - 1,
+            format_func=lambda m: MONTH_NAMES[m],
+            key=f"sb_focus_month_{cur_month}_{cur_year}"
+        )
+        if chosen_month != cur_month:
+            st.session_state["focus_cal_month"] = chosen_month
+            st.rerun()
+
+    with nav_col3:
+        all_years = sorted(list(set([2024, 2025, 2026, 2027, datetime.date.today().year] + [int(d[:4]) for d in meta["dates"] if len(d) >= 4 and d[:4].isdigit()])))
+        year_idx = all_years.index(cur_year) if cur_year in all_years else 0
+        chosen_year = st.selectbox(
+            "Pilih Tahun:",
+            options=all_years,
+            index=year_idx,
+            key=f"sb_focus_year_{cur_year}_{cur_month}"
+        )
+        if chosen_year != cur_year:
+            st.session_state["focus_cal_year"] = chosen_year
+            st.rerun()
+
+    with nav_col4:
+        if st.button("Berikutnya ▶", key="btn_focus_next_cal", use_container_width=True):
+            if cur_month == 12:
+                st.session_state["focus_cal_month"] = 1
+                st.session_state["focus_cal_year"] += 1
+            else:
+                st.session_state["focus_cal_month"] += 1
+            st.rerun()
+
+    with nav_col5:
+        if st.button("📅 Bulan Ini", key="btn_focus_today_cal", use_container_width=True):
+            td = datetime.date.today()
+            st.session_state["focus_cal_month"] = td.month
+            st.session_state["focus_cal_year"] = td.year
+            st.rerun()
+
+    # Hitung jumlah deteksi pada bulan ini
+    cur_year = st.session_state["focus_cal_year"]
+    cur_month = st.session_state["focus_cal_month"]
+    month_prefix = f"{cur_year:04d}-{cur_month:02d}"
+
+    month_events = [
+        ev for d_str, ev_list in events_by_date.items()
+        if d_str.startswith(month_prefix)
+        for ev in ev_list
+    ]
+    month_dates_count = len([d_str for d_str in events_by_date if d_str.startswith(month_prefix)])
+
+    if month_events:
+        st.success(f"🔥 Saham **{selected_ticker}** terdeteksi pada **{month_dates_count} tanggal** screener di bulan **{MONTH_NAMES[cur_month]} {cur_year}**!")
+    else:
+        st.info(f"ℹ️ Tidak ada catatan kemunculan screener untuk saham **{selected_ticker}** pada bulan **{MONTH_NAMES[cur_month]} {cur_year}**.")
+
+    # 3. Render Grid Kalender Senin - Minggu
+    import calendar
+    calendar.setfirstweekday(calendar.MONDAY)
+    weeks = calendar.monthcalendar(cur_year, cur_month)
+    day_headers = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu (Libur)", "Minggu (Libur)"]
+
+    html_parts = []
+    html_parts.append("""
+    <div style="width:100%; overflow-x:auto; margin-top:12px; margin-bottom:20px;">
+      <div style="min-width:700px;">
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:8px;">
+    """)
+    for idx, h_name in enumerate(day_headers):
+        bg = "#334155" if idx < 5 else "#64748b"
+        color = "#ffffff" if idx < 5 else "#e2e8f0"
+        html_parts.append(f"""
+          <div style="text-align:center; font-weight:700; font-size:12.5px; padding:8px 4px; background:{bg}; color:{color}; border-radius:6px;">
+            {h_name}
+          </div>
+        """)
+    html_parts.append("""
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">
+    """)
+
+    today_str = str(datetime.date.today())
+
+    for week in weeks:
+        for col_idx, day_num in enumerate(week):
+            if day_num == 0:
+                html_parts.append("""
+                  <div style="min-height:95px; background:rgba(125,125,125,0.03); border:1px dashed rgba(125,125,125,0.15); border-radius:8px;"></div>
+                """)
+            else:
+                date_str = f"{cur_year:04d}-{cur_month:02d}-{day_num:02d}"
+                day_events = events_by_date.get(date_str, [])
+                is_today = (date_str == today_str)
+                is_weekend = (col_idx >= 5)
+
+                if day_events:
+                    border_style = "2px solid #10b981"
+                    bg_style = "rgba(16,185,129,0.09)"
+                    shadow_style = "box-shadow: 0 4px 6px -1px rgba(16,185,129,0.2);"
+                else:
+                    border_style = "1px solid rgba(125,125,125,0.2)"
+                    bg_style = "rgba(125,125,125,0.02)" if is_weekend else "rgba(125,125,125,0.05)"
+                    shadow_style = ""
+
+                today_ring = "outline: 2px solid #3b82f6; outline-offset: -2px;" if is_today else ""
+
+                html_parts.append(f"""
+                  <div style="min-height:100px; background:{bg_style}; border:{border_style}; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; {shadow_style} {today_ring}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                      <span style="font-size:13px; font-weight:800; color:{'#10b981' if day_events else 'inherit'};">{day_num}</span>
+                      {f'<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">Screener</span>' if day_events else (f'<span style="font-size:9.5px; opacity:0.5;">Libur</span>' if is_weekend else '')}
+                    </div>
+                """)
+
+                for ev in day_events:
+                    cat_name = ev.get("category", "Saham Tidur")
+                    if "fundamental" in cat_name.lower():
+                        badge_bg = "#7c3aed"
+                        icon = "💎"
+                    elif "flow" in cat_name.lower():
+                        badge_bg = "#0284c7"
+                        icon = "🌊"
+                    else:
+                        badge_bg = "#d97706"
+                        icon = "💤"
+
+                    ev_type = ev.get("type", "ACTIVE")
+                    if ev_type == "EXIT_TP":
+                        badge_bg = "#16a34a"
+                        icon = "💰"
+                    elif ev_type == "EXIT_SL":
+                        badge_bg = "#dc2626"
+                        icon = "🛑"
+
+                    p_val = ev.get("price", 0)
+                    ket_str = ev.get("ket", "")
+
+                    html_parts.append(f"""
+                      <div style="background:{badge_bg}; color:#ffffff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; margin-top:2px; line-height:1.2;">
+                        {icon} {cat_name}
+                      </div>
+                      <div style="font-size:11.5px; font-weight:700; color:#10b981; margin-top:2px;">
+                        Harga: {format_id_number(p_val)}
+                      </div>
+                      {f'<div style="font-size:10px; opacity:0.85; font-style:italic; line-height:1.1; margin-top:1px;">{ket_str}</div>' if ket_str else ''}
+                    """)
+
+                html_parts.append("""
+                  </div>
+                """)
+
+    html_parts.append("""
+        </div>
+      </div>
+    </div>
+    """)
+
+    st.markdown("".join(html_parts), unsafe_allow_html=True)
+
+    # 4. Tabel Rekap Riwayat Deteksi Saham Ini
+    st.markdown(f"##### 📋 Riwayat Lengkap Deteksi Saham **{selected_ticker}**")
+    table_rows = []
+    all_dates_sorted = sorted(list(events_by_date.keys()), reverse=True)
+    for d_str in all_dates_sorted:
+        for ev in events_by_date[d_str]:
+            try:
+                dt_obj = datetime.datetime.strptime(d_str, "%Y-%m-%d")
+                day_name_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"][dt_obj.weekday()]
+                formatted_d = f"{day_name_id}, {dt_obj.strftime('%d/%m/%Y')}"
+            except:
+                formatted_d = d_str
+
+            table_rows.append({
+                "Tanggal": formatted_d,
+                "Kategori Screener": ev.get("category", "-"),
+                "Harga": format_id_number(ev.get("price", 0)),
+                "Keterangan": ev.get("ket") or "-",
+                "Status": ev.get("status_label", "-")
+            })
+
+    if table_rows:
+        df_history = pd.DataFrame(table_rows)
+        st.dataframe(
+            df_history,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Tanggal": st.column_config.TextColumn("Tanggal Deteksi", width="medium"),
+                "Kategori Screener": st.column_config.TextColumn("Kategori Screener", width="medium"),
+                "Harga": st.column_config.TextColumn("Harga Masuk / Deteksi", width="small", alignment="right"),
+                "Keterangan": st.column_config.TextColumn("Keterangan", width="medium"),
+                "Status": st.column_config.TextColumn("Status", width="medium"),
+            }
+        )
+    else:
+        st.caption("Belum ada riwayat deteksi tercatat untuk saham ini.")
+
+
+# ==========================================
+# 3. EMPAT TAB HASIL SCREENER & FOKUS SATU SAHAM
+# ==========================================
+st.markdown("### 🎯 Hasil Screener & Kalender Saham")
+st.caption("Pilih tab di bawah untuk memantau saham aktif berdasarkan kategori screener atau fokus analisa per emiten:")
 
 # Cek apakah ada emiten yang beririsan di multiple screener
 multi_confluence = {}
@@ -1123,10 +1664,11 @@ if multi_stocks or multi_hits:
 
     st.info("  \n".join(info_parts))
 
-tab_flow, tab_golden, tab_sleep = st.tabs([
+tab_flow, tab_golden, tab_sleep, tab_focus = st.tabs([
     "🌊 Flow Masuk",
     "💎 Flow Masuk + Fundamental OK",
-    "💤 Saham Tidur"
+    "💤 Saham Tidur",
+    "🎯 Fokus Satu Saham"
 ])
 
 with tab_flow:
@@ -1137,6 +1679,10 @@ with tab_golden:
 
 with tab_sleep:
     render_screener_table("Saham Tidur", "💤", "saham_tidur", active_list, is_editor, data)
+
+with tab_focus:
+    render_single_stock_focus(data, is_editor)
+
 
 # ==========================================
 # PANEL OPERASI EDITOR (HANYA AKTIF SAAT LOGIN)
@@ -1246,7 +1792,14 @@ if is_editor:
                                     "note": "Keluar dari screener (Done)",
                                     "ket": "Done",
                                     "hit_dates": [row_date],
-                                    "hit_count": 1
+                                    "hit_count": 1,
+                                    "hit_details": {
+                                        row_date: {
+                                            "price": p_val if p_val > 0 else 0,
+                                            "category": target_cat_clean,
+                                            "ket": "Done"
+                                        }
+                                    }
                                 }
                                 data["awakened_history"].insert(0, new_done)
                                 added_to_done += 1
@@ -1263,6 +1816,13 @@ if is_editor:
                                     updated_hits += 1
                                 if ket_val:
                                     old_s["ket"] = ket_val
+                                if "hit_details" not in old_s:
+                                    old_s["hit_details"] = {}
+                                old_s["hit_details"][row_date] = {
+                                    "price": int(p_val) if p_val > 0 else old_s.get("entry_price", 0),
+                                    "category": target_cat_clean,
+                                    "ket": ket_val
+                                }
                                 if p_val > 0 and old_s.get("entry_price", 0) <= 0:
                                     old_s["entry_price"] = p_val
                                     old_s["current_price"] = p_val
@@ -1284,7 +1844,14 @@ if is_editor:
                                     "is_fca": (p_val <= 50),
                                     "ket": ket_val,
                                     "hit_dates": [row_date],
-                                    "hit_count": 1
+                                    "hit_count": 1,
+                                    "hit_details": {
+                                        row_date: {
+                                            "price": int(p_val),
+                                            "category": target_cat_clean,
+                                            "ket": ket_val
+                                        }
+                                    }
                                 }
                                 data["active_stocks"].append(new_act)
                                 active_map[pair_key] = new_act
@@ -1422,6 +1989,13 @@ if is_editor:
                                 if b_date_str not in old["hit_dates"]:
                                     old["hit_dates"].append(b_date_str)
                                     old["hit_count"] = len(old["hit_dates"])
+                                    if "hit_details" not in old:
+                                        old["hit_details"] = {}
+                                    old["hit_details"][b_date_str] = {
+                                        "price": int(price) if price and price > 0 else old.get("entry_price", 0),
+                                        "category": target_cat_clean,
+                                        "ket": ""
+                                    }
                                     has_data_changed = True
                                     skipped.append({
                                         "Kode": ticker,
@@ -1455,7 +2029,14 @@ if is_editor:
                                     "tp3": 0,
                                     "is_fca": is_fca,
                                     "hit_dates": [b_date_str],
-                                    "hit_count": 1
+                                    "hit_count": 1,
+                                    "hit_details": {
+                                        b_date_str: {
+                                            "price": int(price),
+                                            "category": target_cat_clean,
+                                            "ket": ""
+                                        }
+                                    }
                                 }
                                 data["active_stocks"].append(new_stock)
                                 has_data_changed = True
@@ -1942,7 +2523,8 @@ if is_editor:
                                     "note": "Keluar dari screener (Done)",
                                     "ket": "Done",
                                     "hit_dates": s.get("hit_dates", [s["entry_date"]]),
-                                    "hit_count": s.get("hit_count", len(s.get("hit_dates", [s["entry_date"]])))
+                                    "hit_count": s.get("hit_count", len(s.get("hit_dates", [s["entry_date"]]))),
+                                    "hit_details": s.get("hit_details", {})
                                 }
                                 data["awakened_history"].insert(0, done_hist)
                                 done_moved_count += 1

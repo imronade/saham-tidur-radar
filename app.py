@@ -1491,32 +1491,26 @@ def render_single_stock_focus(data, is_editor):
     day_headers = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu (Libur)", "Minggu (Libur)"]
 
     html_parts = []
-    html_parts.append("""
-    <div style="width:100%; overflow-x:auto; margin-top:12px; margin-bottom:20px;">
-      <div style="min-width:700px;">
-        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:8px;">
-    """)
+    html_parts.append('<div style="width:100%; overflow-x:auto; margin-top:12px; margin-bottom:20px;">')
+    html_parts.append('  <div style="min-width:700px;">')
+    html_parts.append('    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:8px;">')
     for idx, h_name in enumerate(day_headers):
         bg = "#334155" if idx < 5 else "#64748b"
         color = "#ffffff" if idx < 5 else "#e2e8f0"
-        html_parts.append(f"""
-          <div style="text-align:center; font-weight:700; font-size:12.5px; padding:8px 4px; background:{bg}; color:{color}; border-radius:6px;">
-            {h_name}
-          </div>
-        """)
-    html_parts.append("""
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">
-    """)
+        html_parts.append(
+            f'<div style="text-align:center; font-weight:700; font-size:12.5px; padding:8px 4px; background:{bg}; color:{color}; border-radius:6px;">{h_name}</div>'
+        )
+    html_parts.append('    </div>')
+    html_parts.append('    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">')
 
     today_str = str(datetime.date.today())
 
     for week in weeks:
         for col_idx, day_num in enumerate(week):
             if day_num == 0:
-                html_parts.append("""
-                  <div style="min-height:95px; background:rgba(125,125,125,0.03); border:1px dashed rgba(125,125,125,0.15); border-radius:8px;"></div>
-                """)
+                html_parts.append(
+                    '<div style="min-height:95px; background:rgba(125,125,125,0.03); border:1px dashed rgba(125,125,125,0.15); border-radius:8px;"></div>'
+                )
             else:
                 date_str = f"{cur_year:04d}-{cur_month:02d}-{day_num:02d}"
                 day_events = events_by_date.get(date_str, [])
@@ -1533,14 +1527,16 @@ def render_single_stock_focus(data, is_editor):
                     shadow_style = ""
 
                 today_ring = "outline: 2px solid #3b82f6; outline-offset: -2px;" if is_today else ""
+                badge_libur_screener = '<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">Screener</span>' if day_events else ('<span style="font-size:9.5px; opacity:0.5;">Libur</span>' if is_weekend else '')
+                num_color = '#10b981' if day_events else 'inherit'
 
-                html_parts.append(f"""
-                  <div style="min-height:100px; background:{bg_style}; border:{border_style}; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; {shadow_style} {today_ring}">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                      <span style="font-size:13px; font-weight:800; color:{'#10b981' if day_events else 'inherit'};">{day_num}</span>
-                      {f'<span style="font-size:9.5px; background:#10b981; color:#ffffff; padding:1px 5px; border-radius:10px; font-weight:bold;">Screener</span>' if day_events else (f'<span style="font-size:9.5px; opacity:0.5;">Libur</span>' if is_weekend else '')}
-                    </div>
-                """)
+                cell_items = [
+                    f'<div style="min-height:100px; background:{bg_style}; border:{border_style}; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; {shadow_style} {today_ring}">',
+                    f'  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">',
+                    f'    <span style="font-size:13px; font-weight:800; color:{num_color};">{day_num}</span>',
+                    f'    {badge_libur_screener}',
+                    f'  </div>'
+                ]
 
                 for ev in day_events:
                     cat_name = ev.get("category", "Saham Tidur")
@@ -1554,7 +1550,7 @@ def render_single_stock_focus(data, is_editor):
                         badge_bg = "#d97706"
                         icon = "💤"
 
-                    ev_type = ev.get("type", "ACTIVE")
+                    ev_type = ev.get("source") or ev.get("type", "ACTIVE")
                     if ev_type == "EXIT_TP":
                         badge_bg = "#16a34a"
                         icon = "💰"
@@ -1564,28 +1560,34 @@ def render_single_stock_focus(data, is_editor):
 
                     p_val = ev.get("price", 0)
                     ket_str = ev.get("ket", "")
+                    ket_badge = f'<div style="font-size:10px; opacity:0.85; font-style:italic; line-height:1.1; margin-top:1px;">{ket_str}</div>' if ket_str else ''
 
-                    html_parts.append(f"""
-                      <div style="background:{badge_bg}; color:#ffffff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; margin-top:2px; line-height:1.2;">
-                        {icon} {cat_name}
-                      </div>
-                      <div style="font-size:11.5px; font-weight:700; color:#10b981; margin-top:2px;">
-                        Harga: {format_id_number(p_val)}
-                      </div>
-                      {f'<div style="font-size:10px; opacity:0.85; font-style:italic; line-height:1.1; margin-top:1px;">{ket_str}</div>' if ket_str else ''}
-                    """)
+                    cell_items.append(
+                        f'<div style="background:{badge_bg}; color:#ffffff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; margin-top:2px; line-height:1.2;">'
+                        f'{icon} {cat_name}'
+                        f'</div>'
+                        f'<div style="font-size:11.5px; font-weight:700; color:#10b981; margin-top:2px;">'
+                        f'Harga: {format_id_number(p_val)}'
+                        f'</div>'
+                        f'{ket_badge}'
+                    )
 
-                html_parts.append("""
-                  </div>
-                """)
+                cell_items.append('</div>')
+                html_parts.append("".join(cell_items))
 
-    html_parts.append("""
-        </div>
-      </div>
-    </div>
-    """)
+    html_parts.append('    </div>')
+    html_parts.append('  </div>')
+    html_parts.append('</div>')
 
-    st.markdown("".join(html_parts), unsafe_allow_html=True)
+    clean_calendar_html = "\n".join(
+        line.strip()
+        for line in "".join(html_parts).splitlines()
+        if line.strip()
+    )
+    if hasattr(st, "html"):
+        st.html(clean_calendar_html)
+    else:
+        st.markdown(clean_calendar_html, unsafe_allow_html=True)
 
     # 4. Tabel Rekap Riwayat Deteksi Saham Ini
     st.markdown(f"##### 📋 Riwayat Lengkap Deteksi Saham **{selected_ticker}**")

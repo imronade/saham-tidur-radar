@@ -773,10 +773,19 @@ def fetch_latest_price(ticker):
     return None
 
 # ==========================================
-# INISIALISASI SESSION STATE
+# INISIALISASI SESSION STATE & AUTO-SYNC GOOGLE SHEETS
 # ==========================================
 if "data" not in st.session_state:
     st.session_state["data"] = load_data()
+    # Otomatis sinkronkan dari Google Sheets setiap sesi baru dibuka
+    try:
+        _init_gs_cfg = load_gsheet_config()
+        _flow_url = _init_gs_cfg.get("url_flow", DEFAULT_GSHEET_FLOW)
+        _sleep_url = _init_gs_cfg.get("url_saham_tidur", DEFAULT_GSHEET_SLEEP)
+        if _flow_url or _sleep_url:
+            sync_data_from_gsheets(st.session_state["data"], _flow_url, _sleep_url)
+    except Exception:
+        pass
 
 if "is_editor" not in st.session_state:
     st.session_state["is_editor"] = False

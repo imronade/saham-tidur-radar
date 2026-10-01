@@ -16,13 +16,182 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Password Editor Rahasia
 DEFAULT_PASSWORD = "password_rahasia_anda"
-EDITOR_PASSWORD = st.secrets.get("EDITOR_PASSWORD", DEFAULT_PASSWORD) if hasattr(st, "secrets") else DEFAULT_PASSWORD
+try:
+    EDITOR_PASSWORD = st.secrets.get("EDITOR_PASSWORD", DEFAULT_PASSWORD)
+except Exception:
+    EDITOR_PASSWORD = DEFAULT_PASSWORD
 
 DATA_FILE = "stocks_data.json"
+GSHEET_CONFIG_FILE = "gsheet_config.json"
 
-# ==========================================
+DEFAULT_GSHEET_FLOW = "https://docs.google.com/spreadsheets/d/1EIoPB9SwkekAT9u75FC6MtxynjfDAh9ZopADngwx5zI/edit?gid=0#gid=0"
+DEFAULT_GSHEET_SLEEP = "https://docs.google.com/spreadsheets/d/1LSB4_3vFVHdQjVaOgJfUuzMY7fDUdm5R8dZePWrfEYQ/edit?gid=0#gid=0"
+
+def load_gsheet_config():
+    if os.path.exists(GSHEET_CONFIG_FILE):
+        try:
+            with open(GSHEET_CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return {
+        "url_flow": DEFAULT_GSHEET_FLOW,
+        "url_saham_tidur": DEFAULT_GSHEET_SLEEP
+    }
+
+def save_gsheet_config(cfg):
+    try:
+        with open(GSHEET_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+def convert_to_gsheet_csv_url(url):
+    """Mengubah link edit Google Sheets biasa menjadi link export CSV publik."""
+    if not url:
+        return ""
+    url = url.strip()
+    m = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
+    if not m:
+        return url
+    sheet_id = m.group(1)
+    gid = "0"
+    m_gid = re.search(r'[#&?]gid=([0-9]+)', url)
+    if m_gid:
+        gid = m_gid.group(1)
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+
+def fetch_gsheet_parsed_records(url):
+    """Mengunduh CSV dari Google Sheets dan mem-parsing baris-baris screener."""
+    import urllib.request
+    csv_url = convert_to_gsheet_csv_url(url)
+    if not csv_url:
+        return []
+    req = urllib.request.Request(csv_url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        content = resp.read()
+    return parse_screener_file(content, "gsheet.csv")
+
+def sync_data_from_gsheets(data, url_flow, url_sleep):
+    """
+    Sinkronisasi langsung dari Google Sheets Screener Flow dan Saham Tidur ke database data.
+    Mengupdate Watchlist Aktif, hit_dates, hit_count, dan status Done.
+    """
+    targets = [
+        (url_flow, "Flow Masuk"),
+        (url_sleep, "Saham Tidur")
+    ]
+    
+    total_added_active = 0
+    total_added_done = 0
+    total_updated_hits = 0
+
+    active_map = {}
+    for s in data["active_stocks"]:
+        key = (s["ticker"], s.get("category", "Saham Tidur"))
+        active_map[key] = s
+
+    for sheet_url, category_name in targets:
+        if not sheet_url:
+            continue
+        try:
+            records = fetch_gsheet_parsed_records(sheet_url)
+        except Exception as e:
+            continue
+
+        for row in records:
+            t = row["ticker"]
+            row_date = row["date"] or str(datetime.date.today())
+            p_val = row["price"]
+            ket_val = str(row.get("ket", "")).strip()
+
+            if ket_val.lower() == "done":
+                is_dup_hist = any(
+                    h["ticker"] == t and h.get("entry_date") == row_date
+                    for h in data["awakened_history"]
+                )
+                if not is_dup_hist:
+                    new_done = {
+                        "ticker": t,
+                        "category": category_name,
+                        "is_syariah": True,
+                        "entry_date": row_date,
+                        "awakened_date": row_date,
+                        "hold_days": 1,
+                        "entry_price": p_val if p_val > 0 else 0,
+                        "exit_price": p_val if p_val > 0 else 0,
+                        "gain_pct": 0.0,
+                        "status_exit": "SELESAI (DONE) ✅",
+                        "note": "Keluar dari screener (Done)",
+                        "ket": "Done",
+                        "hit_dates": [row_date],
+                        "hit_count": 1,
+                        "hit_details": {
+                            row_date: {
+                                "price": p_val if p_val > 0 else 0,
+                                "category": category_name,
+                                "ket": "Done"
+                            }
+                        }
+                    }
+                    data["awakened_history"].insert(0, new_done)
+                    total_added_done += 1
+            else:
+                pair_key = (t, category_name)
+                if pair_key in active_map:
+                    old_s = active_map[pair_key]
+                    if "hit_dates" not in old_s or not old_s["hit_dates"]:
+                        old_s["hit_dates"] = [old_s.get("entry_date", row_date)]
+                    if row_date not in old_s["hit_dates"]:
+                        old_s["hit_dates"].append(row_date)
+                        old_s["hit_count"] = len(old_s["hit_dates"])
+                        total_updated_hits += 1
+                    if ket_val:
+                        old_s["ket"] = ket_val
+                    if "hit_details" not in old_s:
+                        old_s["hit_details"] = {}
+                    old_s["hit_details"][row_date] = {
+                        "price": int(p_val) if p_val > 0 else old_s.get("entry_price", 0),
+                        "category": category_name,
+                        "ket": ket_val
+                    }
+                    if p_val > 0 and old_s.get("entry_price", 0) <= 0:
+                        old_s["entry_price"] = p_val
+                        old_s["current_price"] = p_val
+                else:
+                    if p_val <= 0:
+                        live_p = fetch_latest_price(t)
+                        p_val = live_p if live_p else 50
+                    new_act = {
+                        "ticker": t,
+                        "category": category_name,
+                        "is_syariah": True,
+                        "entry_date": row_date,
+                        "entry_price": int(p_val),
+                        "current_price": int(p_val),
+                        "sl": 0,
+                        "tp1": 0,
+                        "tp2": 0,
+                        "tp3": 0,
+                        "is_fca": False,
+                        "hit_dates": [row_date],
+                        "hit_count": 1,
+                        "ket": ket_val,
+                        "hit_details": {
+                            row_date: {
+                                "price": int(p_val),
+                                "category": category_name,
+                                "ket": ket_val
+                            }
+                        }
+                    }
+                    data["active_stocks"].append(new_act)
+                    active_map[pair_key] = new_act
+                    total_added_active += 1
+
+    save_data(data)
+    return total_added_active, total_added_done, total_updated_hits
 # FUNGSI HITUNG HARI KERJA (SENIN - JUMAT)
 # ==========================================
 def calculate_working_days(start_date, end_date=None):
@@ -168,69 +337,51 @@ def parse_screener_file(file_bytes, filename):
             import io
             df = pd.read_csv(io.BytesIO(file_bytes))
             # Identifikasi kolom
-            cols_lower = {str(c).lower().strip(): c for c in df.columns}
-            t_col = None
-            for candidate in ["emiten", "kode", "ticker", "symbol", "emiten saham", "saham"]:
-                for cl in cols_lower:
-                    if candidate in cl:
-                        t_col = cols_lower[cl]
-                        break
-                if t_col:
-                    break
-            
-            p_col = None
-            for candidate in ["harga", "price", "close", "penutupan", "harga penutupan"]:
-                for cl in cols_lower:
-                    if candidate in cl:
-                        p_col = cols_lower[cl]
-                        break
-                if p_col:
-                    break
-
-            d_col = None
-            for candidate in ["tanggal", "date", "tgl"]:
-                for cl in cols_lower:
-                    if candidate in cl:
-                        d_col = cols_lower[cl]
-                        break
-                if d_col:
-                    break
-
-            k_col = None
-            for candidate in ["keterangan", "ket", "status", "note"]:
-                for cl in cols_lower:
-                    if candidate in cl:
-                        k_col = cols_lower[cl]
-                        break
-                if k_col:
-                    break
+            cols_map = {}
+            for c in df.columns:
+                cl = str(c).lower().replace('\n', ' ').strip()
+                if any(x in cl for x in ['emiten', 'kode', 'ticker', 'symbol', 'saham']):
+                    cols_map['ticker'] = c
+                elif any(x in cl for x in ['harga', 'penutupan', 'price', 'close']):
+                    cols_map['price'] = c
+                elif any(x in cl for x in ['tanggal', 'date', 'tgl']):
+                    cols_map['date'] = c
+                elif any(x in cl for x in ['keterangan', 'ket', 'status', 'note']):
+                    cols_map['ket'] = c
 
             current_d = str(datetime.date.today())
             for _, row in df.iterrows():
-                if t_col and pd.notna(row[t_col]):
-                    raw_t = str(row[t_col]).strip().upper()
+                d_val = row.get(cols_map.get('date'))
+                if pd.notna(d_val) and str(d_val).strip() != '':
+                    norm_d = normalize_parsed_date(d_val)
+                    if norm_d:
+                        current_d = norm_d
+
+                t_val = row.get(cols_map.get('ticker'))
+                if pd.notna(t_val) and str(t_val).strip() != '':
+                    raw_t = str(t_val).strip().upper()
                     m_tick = re.search(r'\b[A-Za-z]{4}\b', raw_t)
                     if not m_tick:
                         continue
-                    ticker = m_tick.group(0).upper()
-                    
+                    clean_ticker = m_tick.group(0).upper()
+                    if clean_ticker in ['OPEN', 'HIGH', 'LOWS', 'LAST', 'NAME', 'CODE', 'DATE', 'HARI']:
+                        continue
+
                     p_val = 0
-                    if p_col and pd.notna(row[p_col]):
+                    p_cell = row.get(cols_map.get('price'))
+                    if pd.notna(p_cell):
                         try:
-                            p_val = int(round(float(str(row[p_col]).replace(",", ""))))
+                            p_val = int(round(float(str(p_cell).replace(',', ''))))
                         except:
                             p_val = 0
-                    
-                    if d_col and pd.notna(row[d_col]):
-                        raw_date = str(row[d_col]).strip()
-                        current_d = normalize_parsed_date(raw_date)
-                    
-                    ket_val = str(row[k_col]).strip() if (k_col and pd.notna(row[k_col])) else ""
+
+                    k_cell = row.get(cols_map.get('ket'))
+                    ket_val = str(k_cell).strip() if pd.notna(k_cell) else ''
                     records.append({
-                        "ticker": ticker,
-                        "date": current_d,
-                        "price": p_val,
-                        "ket": ket_val
+                        'ticker': clean_ticker,
+                        'date': current_d,
+                        'price': p_val,
+                        'ket': ket_val
                     })
             return records
         except Exception as e:
@@ -324,7 +475,6 @@ def normalize_parsed_date(val):
     """Normalisasi tanggal dari Excel datetime atau string ke format YYYY-MM-DD"""
     if isinstance(val, (datetime.datetime, datetime.date)):
         y, m, d = val.year, val.month, val.day
-        # Di Excel, kadang hari dan bulan tertukar jika day <= 12 dan month=9 (September)
         if m in [2, 4, 7, 8] and d == 9:
             return f"{y}-09-{m:02d}"
         return f"{y}-{m:02d}-{d:02d}"
@@ -334,11 +484,22 @@ def normalize_parsed_date(val):
             return None
         parts = v.split("/")
         if len(parts) == 3:
-            m, d, y = parts
-            if len(y) == 2:
-                y = "20" + y
+            p1, p2, p3 = parts
+            if len(p3) == 2:
+                p3 = "20" + p3
             try:
-                return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+                ip1, ip2, ip3 = int(p1), int(p2), int(p3)
+                if ip1 > 12:
+                    d, m, y = ip1, ip2, ip3
+                elif ip2 > 12:
+                    m, d, y = ip1, ip2, ip3
+                elif ip1 in [8, 9] and ip2 in range(1, 32):
+                    m, d, y = ip1, ip2, ip3
+                elif ip2 in [8, 9] and ip1 in range(1, 32):
+                    d, m, y = ip1, ip2, ip3
+                else:
+                    m, d, y = ip1, ip2, ip3
+                return f"{y:04d}-{m:02d}-{d:02d}"
             except:
                 return v
         parts = v.split("-")
@@ -724,10 +885,21 @@ with col_title:
     st.caption("Pantau saham, evaluasi, pantau, dan amankan profit")
 
 with col_btn:
+    gs_cfg = load_gsheet_config()
     if is_editor:
-        b_upd, b_exit = st.columns([1.3, 1])
+        b_sync, b_upd, b_exit = st.columns([1.3, 1.2, 0.9])
+        with b_sync:
+            if st.button("📥 Sync GSheets", type="primary", use_container_width=True, help="Tarik & sinkronkan data terbaru dari Google Sheets Screener Flow & Saham Tidur"):
+                with st.spinner("Menghubungkan ke Google Sheets & menyinkronkan data..."):
+                    add_act, add_done, upd_hits = sync_data_from_gsheets(
+                        data,
+                        gs_cfg.get("url_flow", DEFAULT_GSHEET_FLOW),
+                        gs_cfg.get("url_saham_tidur", DEFAULT_GSHEET_SLEEP)
+                    )
+                    st.toast(f"Sinkronisasi GSheets Berhasil! (+{add_act} aktif, +{add_done} done, +{upd_hits} hit)", icon="✅")
+                    st.rerun()
         with b_upd:
-            if st.button("🔄 Update Harga", type="primary", use_container_width=True):
+            if st.button("🔄 Cek Harga", type="secondary", use_container_width=True, help="Update harga live dari bursa"):
                 with st.spinner("Mengambil harga bursa..."):
                     unique_tickers = list(set(s["ticker"] for s in data["active_stocks"]))
                     ticker_prices = {}
@@ -745,9 +917,19 @@ with col_btn:
                     st.toast(f"Berhasil update {updated_count} posisi saham!", icon="✅")
                     st.rerun()
         with b_exit:
-            if st.button("🚪 Exit Editor", type="secondary", use_container_width=True, key="btn_exit_header"):
+            if st.button("🚪 Exit", type="secondary", use_container_width=True, key="btn_exit_header"):
                 st.session_state["is_editor"] = False
                 st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
+                st.rerun()
+    else:
+        if st.button("📥 Sinkronkan Data dari Google Sheets", type="primary", use_container_width=True, help="Tarik data terbaru dari Google Sheets Screener"):
+            with st.spinner("Menghubungkan ke Google Sheets..."):
+                add_act, add_done, upd_hits = sync_data_from_gsheets(
+                    data,
+                    gs_cfg.get("url_flow", DEFAULT_GSHEET_FLOW),
+                    gs_cfg.get("url_saham_tidur", DEFAULT_GSHEET_SLEEP)
+                )
+                st.toast(f"Sinkronisasi GSheets Berhasil! (+{add_act} aktif, +{add_done} done, +{upd_hits} hit)", icon="✅")
                 st.rerun()
 
 # ==========================================
@@ -1654,7 +1836,8 @@ if is_editor:
             st.session_state["is_editor"] = False
             st.toast("Anda telah keluar dari Mode Editor.", icon="🔒")
             st.rerun()
-    tab_upload_file, tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_cuan, tab_manage_gagal = st.tabs([
+    tab_gsheet, tab_upload_file, tab_quick_import, tab_bungkus, tab_sl, tab_add, tab_manage_active, tab_manage_cuan, tab_manage_gagal = st.tabs([
+        "🔗 Sinkronisasi Google Sheets",
         "📁 Upload Excel / CSV",
         "⚡ Quick Import Stockbit",
         "💰 Bungkus Cuan (Take Profit)",
@@ -1664,6 +1847,60 @@ if is_editor:
         "🏆 Kelola Histori Bangun (Centang Hapus / Edit)",
         "🛑 Kelola Gagal Bangun (Centang Hapus / Edit)"
     ])
+
+    # ----------------------------------------------------
+    # TAB GSHEET: SINKRONISASI GOOGLE SHEETS
+    # ----------------------------------------------------
+    with tab_gsheet:
+        st.markdown("##### 🔗 Sinkronisasi Langsung dari Google Sheets")
+        st.caption("Masukkan link Google Spreadsheet untuk Screener Flow dan Saham Tidur. Perubahan data di spreadsheet Anda dapat disinkronkan ke dashboard secara instan.")
+
+        gs_conf = load_gsheet_config()
+
+        gs_c1, gs_c2 = st.columns(2)
+        with gs_c1:
+            st.markdown("###### 🌊 Link Screener Flow")
+            input_flow = st.text_input(
+                "URL Google Sheets (Flow):",
+                value=gs_conf.get("url_flow", DEFAULT_GSHEET_FLOW),
+                key="input_gsheet_url_flow",
+                help="Link spreadsheet untuk kategori Flow Masuk"
+            )
+        with gs_c2:
+            st.markdown("###### 💤 Link Screener Saham Tidur")
+            input_sleep = st.text_input(
+                "URL Google Sheets (Saham Tidur):",
+                value=gs_conf.get("url_saham_tidur", DEFAULT_GSHEET_SLEEP),
+                key="input_gsheet_url_sleep",
+                help="Link spreadsheet untuk kategori Saham Tidur"
+            )
+
+        if (input_flow != gs_conf.get("url_flow")) or (input_sleep != gs_conf.get("url_saham_tidur")):
+            save_gsheet_config({"url_flow": input_flow, "url_saham_tidur": input_sleep})
+
+        st.info("💡 **Tips**: Pastikan izin share spreadsheet disetel ke *'Anyone with the link can view'*. Dashboard akan membaca kolom Tanggal, Emiten Saham, Harga Penutupan, dan Keterangan (Done) secara otomatis.")
+
+        b_sync_tab, b_preview_tab = st.columns([1.5, 1.5])
+        with b_sync_tab:
+            if st.button("🚀 Tarik & Sinkronkan Data Sekarang", type="primary", use_container_width=True, key="btn_exec_gsheet_sync"):
+                with st.spinner("Mengunduh & memproses baris dari kedua Google Sheets..."):
+                    add_act, add_done, upd_hits = sync_data_from_gsheets(data, input_flow, input_sleep)
+                    st.success(f"✅ **Sinkronisasi Berhasil!** Berhasil menambahkan **{add_act} emiten aktif**, **{add_done} emiten selesai (Done)**, dan memperbarui **{upd_hits} tanggal kemunculan**.")
+                    st.rerun()
+
+        with b_preview_tab:
+            if st.button("🔍 Uji Koneksi & Pratinjau Baris", use_container_width=True, key="btn_test_gsheet_preview"):
+                with st.spinner("Mengecek spreadsheet..."):
+                    try:
+                        flow_recs = fetch_gsheet_parsed_records(input_flow)
+                        sleep_recs = fetch_gsheet_parsed_records(input_sleep)
+                        st.write(f"📊 Ditemukan **{len(flow_recs)} baris** pada Sheet Flow & **{len(sleep_recs)} baris** pada Sheet Saham Tidur.")
+                        with st.expander("Lihat 5 Baris Teratas Flow"):
+                            st.dataframe(pd.DataFrame(flow_recs[:5]), use_container_width=True)
+                        with st.expander("Lihat 5 Baris Teratas Saham Tidur"):
+                            st.dataframe(pd.DataFrame(sleep_recs[:5]), use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Gagal menghubungkan ke spreadsheet: {e}")
 
     # ----------------------------------------------------
     # TAB 0: UPLOAD EXCEL / CSV SCREENER
